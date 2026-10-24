@@ -1,6 +1,6 @@
-@WniTaxi.Api_HostAddress = http://localhost:5136
+@Taxi.Api_HostAddress = http://localhost:5136
 
-GET {{WniTaxi.Api_HostAddress}}/weatherforecast/
+GET {{Taxi.Api_HostAddress}}/test/
 Accept: application/json
 
 ###

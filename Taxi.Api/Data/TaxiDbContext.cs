@@ -1,10 +1,12 @@
-namespace Taxi.Api.Data;
-
 using Microsoft.EntityFrameworkCore;
-public class TaxiDbContext : DbContext
+namespace Taxi.Api.Data
 {
-    public TaxiDbContext(DbContextOptions<TaxiDbContext> options) : base(options)
-    {
 
+    public class TaxiDbContext : DbContext
+    {
+        public TaxiDbContext(DbContextOptions<TaxiDbContext> options) : base(options)
+        {
+
+        }
     }
 }
