@@ -57,15 +57,15 @@ Roles: **Customer**, **Driver**, **Admin**, **All** (any logged-in user), **Syst
 - [DONE] **Feature 1.004** — User entity, Role enum and first migration  
    Role: Dev · Size: M (2) · Depends on: 1.002 · Stories: US-01  
    _Done when:_ Users table exists with unique email index; migration file read before it is applied.
-- [ ] **Feature 1.005** — Customer registration with DTO validation and PasswordHasher  
-       Role: Customer · Size: M (2) · Depends on: 1.004, 1.003 · Stories: US-01  
-       _Done when:_ Register returns 201; duplicate email returns 409; password never stored in plain text.
-- [ ] **Feature 1.006** — Login endpoint issuing a JWT with id and role claims  
-       Role: All · Size: M (2) · Depends on: 1.005 · Stories: US-02  
-       _Done when:_ Valid login returns a token; wrong credentials return 401; key comes from User Secrets.
-- [ ] **Feature 1.007** — Role-based authorization (Customer, Driver, Admin)  
-       Role: All · Size: S (1) · Depends on: 1.006 · Stories: US-02, US-21  
-       _Done when:_ Wrong role returns 403; missing token returns 401; user id read from claims only.
+- [DONE] **Feature 1.005** — Customer registration with DTO validation and PasswordHasher  
+   Role: Customer · Size: M (2) · Depends on: 1.004, 1.003 · Stories: US-01  
+   _Done when:_ Register returns 201; duplicate email returns 409; password never stored in plain text.
+- [DONE] **Feature 1.006** — Login endpoint issuing a JWT with id and role claims  
+   Role: All · Size: M (2) · Depends on: 1.005 · Stories: US-02  
+   _Done when:_ Valid login returns a token; wrong credentials return 401; key comes from User Secrets.
+- [DONE] **Feature 1.007** — Role-based authorization (Customer, Driver, Admin)  
+   Role: All · Size: S (1) · Depends on: 1.006 · Stories: US-02, US-21  
+   _Done when:_ Wrong role returns 403; missing token returns 401; user id read from claims only.
 - [ ] **Feature 1.008** — Seed the first admin at startup from configuration  
        Role: Admin · Size: S (1) · Depends on: 1.004, 1.006 · Stories: US-05  
        _Done when:_ Admin exists after first run; credentials come from User Secrets, not code.
