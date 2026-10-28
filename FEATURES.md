@@ -66,7 +66,7 @@ Roles: **Customer**, **Driver**, **Admin**, **All** (any logged-in user), **Syst
 - [DONE] **Feature 1.007** — Role-based authorization (Customer, Driver, Admin)  
    Role: All · Size: S (1) · Depends on: 1.006 · Stories: US-02, US-21  
    _Done when:_ Wrong role returns 403; missing token returns 401; user id read from claims only.
-- [ ] **Feature 1.008** — Seed the first admin at startup from configuration  
+- [DONE] **Feature 1.008** — Seed the first admin at startup from configuration  
        Role: Admin · Size: S (1) · Depends on: 1.004, 1.006 · Stories: US-05  
        _Done when:_ Admin exists after first run; credentials come from User Secrets, not code.
 - [ ] **Feature 1.009** — View and update my own profile (GET/PUT /me)  

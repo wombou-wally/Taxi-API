@@ -61,5 +61,5 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
-
+await DbSeeder.SeedAdminAsync(app.Services);
 app.Run();
