@@ -69,7 +69,7 @@ Roles: **Customer**, **Driver**, **Admin**, **All** (any logged-in user), **Syst
 - [DONE] **Feature 1.008** — Seed the first admin at startup from configuration  
        Role: Admin · Size: S (1) · Depends on: 1.004, 1.006 · Stories: US-05  
        _Done when:_ Admin exists after first run; credentials come from User Secrets, not code.
-- [ ] **Feature 1.009** — View and update my own profile (GET/PUT /me)  
+- [DONE] **Feature 1.009** — View and update my own profile (GET/PUT /me)  
        Role: All · Size: S (1) · Depends on: 1.007 · Stories: US-03  
        _Done when:_ A user reads and edits only their own name and phone.
 - [ ] **Feature 1.010** — Tests: registration, login and role checks  

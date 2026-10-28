@@ -17,14 +17,14 @@ namespace Taxi.Api.Controller
         [Authorize]
         public ActionResult Get()
         {
-            return Ok(new {id =User.GetUserId(),role = User.FindFirstValue(ClaimTypes.Role)});
+            return Ok(new { id = User.GetUserId(), role = User.FindFirstValue(ClaimTypes.Role) });
         }
 
         [HttpGet("customer")]
-        [Authorize(Roles =nameof(Role.Customer))]
+        [Authorize(Roles = nameof(Role.Customer))]
         public ActionResult GetCustomer()
         {
             return Ok("Customer valid");
         }
-    } 
+    }
 }
