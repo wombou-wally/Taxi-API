@@ -72,7 +72,7 @@ Roles: **Customer**, **Driver**, **Admin**, **All** (any logged-in user), **Syst
 - [DONE] **Feature 1.009** — View and update my own profile (GET/PUT /me)  
        Role: All · Size: S (1) · Depends on: 1.007 · Stories: US-03  
        _Done when:_ A user reads and edits only their own name and phone.
-- [ ] **Feature 1.010** — Tests: registration, login and role checks  
+- [DONE] **Feature 1.010** — Tests: registration, login and role checks  
        Role: Dev · Size: M (2) · Depends on: 1.007, 1.009 · Stories: US-01, US-02  
        _Done when:_ Integration tests cover register, login, 401 and 403.
 

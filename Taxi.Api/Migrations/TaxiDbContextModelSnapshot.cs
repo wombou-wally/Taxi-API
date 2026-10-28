@@ -22,6 +22,37 @@ namespace Taxi.Api.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
+            modelBuilder.Entity("Taxi.Api.Models.DriverProfile", b =>
+                {
+                    b.Property<int>("UserId")
+                        .HasColumnType("integer");
+
+                    b.Property<double?>("CurrentLatitude")
+                        .HasColumnType("double precision");
+
+                    b.Property<double?>("CurrentLongitude")
+                        .HasColumnType("double precision");
+
+                    b.Property<bool>("IsOnline")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("LicenceNumber")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<DateTime?>("LocationUpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("UserId");
+
+                    b.ToTable("DriverProfiles");
+                });
+
             modelBuilder.Entity("Taxi.Api.Models.User", b =>
                 {
                     b.Property<int>("Id")
@@ -62,6 +93,22 @@ namespace Taxi.Api.Migrations
                         .IsUnique();
 
                     b.ToTable("Users");
+                });
+
+            modelBuilder.Entity("Taxi.Api.Models.DriverProfile", b =>
+                {
+                    b.HasOne("Taxi.Api.Models.User", "User")
+                        .WithOne("DriverProfile")
+                        .HasForeignKey("Taxi.Api.Models.DriverProfile", "UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("Taxi.Api.Models.User", b =>
+                {
+                    b.Navigation("DriverProfile");
                 });
 #pragma warning restore 612, 618
         }

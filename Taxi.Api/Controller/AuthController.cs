@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Npgsql;
 using System.Reflection;
 using Taxi.Api.Data;
 using Taxi.Api.DTO.Auth;
@@ -46,7 +47,15 @@ namespace Taxi.Api.Controller
 
             user.PasswordHash = _hasher.HashPassword(user, request.Password);
              _context.Add(user);
-            await _context.SaveChangesAsync();
+            try
+            {
+                await _context.SaveChangesAsync();
+            }
+            catch (DbUpdateException ex) when (ex.InnerException is PostgresException { SqlState: PostgresErrorCodes.UniqueViolation })
+            {
+
+                return Problem(statusCode: 409, title: "Email Already Associated to an Account");
+            }
 
             RegisterResponse res = new RegisterResponse
             {
