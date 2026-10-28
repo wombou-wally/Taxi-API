@@ -2,7 +2,7 @@
 
 namespace Taxi.Api.DTO.Auth
 {
-    public class RegisterResponce
+    public class RegisterResponse
     {
         public required int Id { get; set; }
         public required string Email { get; set; }

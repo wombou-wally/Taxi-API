@@ -1,9 +1,11 @@
 ﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Reflection;
 using Taxi.Api.Data;
 using Taxi.Api.DTO.Auth;
 using Taxi.Api.Models;
+using Taxi.Api.Services;
 
 namespace Taxi.Api.Controller
 {
@@ -14,15 +16,17 @@ namespace Taxi.Api.Controller
     {
         private readonly TaxiDbContext _context;
         private readonly IPasswordHasher<User> _hasher;
+        private readonly JwtTokenService _jwtTokenService;
 
-        public AuthController(TaxiDbContext context, IPasswordHasher<User> hasher)
+        public AuthController(TaxiDbContext context, IPasswordHasher<User> hasher, JwtTokenService token)
         {
             _context = context;
             _hasher = hasher;
+            _jwtTokenService = token;
         }
 
         [HttpPost("register")]
-        public async Task<ActionResult<RegisterResponce>> Register(RegisterRequest request)
+        public async Task<ActionResult<RegisterResponse>> Register(RegisterRequest request)
         {
             var email = request.Email.Trim().ToLowerInvariant();
             bool emailExists =  await _context.Users.AnyAsync(e => e.Email == email);
@@ -44,7 +48,7 @@ namespace Taxi.Api.Controller
              _context.Add(user);
             await _context.SaveChangesAsync();
 
-            RegisterResponce res = new RegisterResponce
+            RegisterResponse res = new RegisterResponse
             {
                 Id = user.Id,
                 Email = user.Email,
@@ -54,6 +58,29 @@ namespace Taxi.Api.Controller
 
             };
             return StatusCode(StatusCodes.Status201Created , res);
+        }
+
+        [HttpPost("login")]
+        public async Task<ActionResult<LoginResponse>> Login(LoginRequest request)
+        {
+            var email = request.Email.Trim().ToLowerInvariant();
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == email);
+            if(user == null)
+            {
+                return Problem(statusCode: 401, title: "Email or Password incorrect");
+            }
+            var password = _hasher.VerifyHashedPassword(user,user.PasswordHash, request.Password);
+            if(password == PasswordVerificationResult.Failed)
+            {
+                return Problem(statusCode: 401, title: "Email or Password incorrect");
+            }
+            var (token, expiresAt) = _jwtTokenService.CreateToken(user);
+            return Ok(new LoginResponse
+            {
+                Token = token,
+                ExpiresAt = expiresAt
+            }
+                );
         }
     }
 }
