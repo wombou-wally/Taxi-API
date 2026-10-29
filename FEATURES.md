@@ -87,10 +87,10 @@ Roles: **Customer**, **Driver**, **Admin**, **All** (any logged-in user), **Syst
 - [DONE] **Feature 1.013** — Admin lists pending drivers  
        Role: Admin · Size: S (1) · Depends on: 1.012, 1.008, 1.007 · Stories: US-05  
        _Done when:_ Only an admin sees the list; response uses a DTO.
-- [ ] **Feature 1.014** — Admin approves or rejects a driver  
+- [DONE] **Feature 1.014** — Admin approves or rejects a driver  
        Role: Admin · Size: S (1) · Depends on: 1.013 · Stories: US-05  
        _Done when:_ Status changes persist; a rejected driver cannot go online.
-- [ ] **Feature 1.015** — VehicleType entity with seeded single type and prices  
+- [DONE] **Feature 1.015** — VehicleType entity with seeded single type and prices  
        Role: Dev · Size: S (1) · Depends on: 1.002 · Stories: US-18  
        _Done when:_ One vehicle type with BaseFare, PricePerKm and MinimumFare exists after migration.
 - [ ] **Feature 1.016** — Admin edits vehicle type prices  

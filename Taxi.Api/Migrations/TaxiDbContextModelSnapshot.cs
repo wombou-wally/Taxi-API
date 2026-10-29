@@ -95,6 +95,84 @@ namespace Taxi.Api.Migrations
                     b.ToTable("Users");
                 });
 
+            modelBuilder.Entity("Taxi.Api.Models.VehicleType", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<decimal>("BaseFare")
+                        .HasPrecision(10, 2)
+                        .HasColumnType("numeric(10,2)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<decimal>("MinimumFare")
+                        .HasPrecision(10, 2)
+                        .HasColumnType("numeric(10,2)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<decimal>("PricePerKm")
+                        .HasPrecision(10, 2)
+                        .HasColumnType("numeric(10,2)");
+
+                    b.Property<decimal>("PricePerMinute")
+                        .HasPrecision(10, 2)
+                        .HasColumnType("numeric(10,2)");
+
+                    b.Property<int>("Seats")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Name")
+                        .IsUnique();
+
+                    b.ToTable("VehicleTypes");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            BaseFare = 4.00m,
+                            IsActive = true,
+                            MinimumFare = 7.00m,
+                            Name = "Standard",
+                            PricePerKm = 1.80m,
+                            PricePerMinute = 0.35m,
+                            Seats = 4
+                        },
+                        new
+                        {
+                            Id = 2,
+                            BaseFare = 5.00m,
+                            IsActive = true,
+                            MinimumFare = 9.00m,
+                            Name = "Comfort",
+                            PricePerKm = 2.20m,
+                            PricePerMinute = 0.45m,
+                            Seats = 4
+                        },
+                        new
+                        {
+                            Id = 3,
+                            BaseFare = 6.50m,
+                            IsActive = true,
+                            MinimumFare = 12.00m,
+                            Name = "XL",
+                            PricePerKm = 2.80m,
+                            PricePerMinute = 0.55m,
+                            Seats = 6
+                        });
+                });
+
             modelBuilder.Entity("Taxi.Api.Models.DriverProfile", b =>
                 {
                     b.HasOne("Taxi.Api.Models.User", "User")
