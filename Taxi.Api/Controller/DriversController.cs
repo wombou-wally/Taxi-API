@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using Npgsql;
 using System.Collections;
 using Taxi.Api.Data;
+using Taxi.Api.DTO;
 using Taxi.Api.DTO.Auth;
 using Taxi.Api.Models;
 
@@ -82,6 +83,52 @@ namespace Taxi.Api.Controller
             }
             ).ToListAsync();
                return Ok(pendingDrivers);
+        }
+
+        [Authorize (Roles = nameof(Role.Admin))]
+        [HttpPost("approve/{userId:int}")]
+        public async Task<ActionResult<DriverStatusResponse>> Approve(int userId)
+        {
+            var driver = await _context.DriverProfiles.FirstOrDefaultAsync(d => d.UserId == userId);
+            if (driver == null)
+            {
+                return Problem(statusCode: 404, title: "No Driver with enterd Id");
+            }
+            else if(driver.Status != ApprovalStatus.Pending)
+            {
+                return Problem(statusCode: 409, title: "Driver status is not pending");
+            }
+            driver.Status = ApprovalStatus.Approved;
+            await _context.SaveChangesAsync();
+            var response = new DriverStatusResponse
+            {
+                UserId = userId,
+                Status = driver.Status,
+            };
+            return Ok(response);
+        }
+
+        [Authorize(Roles = nameof(Role.Admin))]
+        [HttpPost("reject/{userId:int}")]
+        public async Task<ActionResult<DriverStatusResponse>> Reject(int userId)
+        {
+            var driver = await _context.DriverProfiles.FirstOrDefaultAsync(d => d.UserId == userId);
+            if (driver == null)
+            {
+                return Problem(statusCode: 404, title: "No Driver with enterd Id");
+            }
+            else if (driver.Status != ApprovalStatus.Pending)
+            {
+                return Problem(statusCode: 409, title: "Driver status is not pending");
+            }
+            driver.Status = ApprovalStatus.Rejected;
+            await _context.SaveChangesAsync();
+            var response = new DriverStatusResponse
+            {
+                UserId = userId,
+                Status = driver.Status,
+            };
+            return Ok(response);
         }
     }
 }
