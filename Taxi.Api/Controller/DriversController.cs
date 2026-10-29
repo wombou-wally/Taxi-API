@@ -1,0 +1,67 @@
+﻿using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using Npgsql;
+using Taxi.Api.Data;
+using Taxi.Api.DTO.Auth;
+using Taxi.Api.Models;
+
+namespace Taxi.Api.Controller
+{
+    [ApiController]
+    [Route("api/drivers")]
+    public class DriversController : ControllerBase
+    {
+        private readonly TaxiDbContext _context;
+        private readonly IPasswordHasher<User> _hasher;
+        public DriversController(TaxiDbContext context, IPasswordHasher<User> hasher)
+        {
+            _context = context;
+            _hasher = hasher;
+        }
+
+        [HttpPost("register")]
+        public async Task<ActionResult<RegisterDriverResponse>> Register(RegisterDriverRequest request)
+        {
+            var email = request.Email.Trim().ToLowerInvariant();
+            bool emailExists = await _context.Users.AnyAsync(e => e.Email == email);
+            
+            if (emailExists)
+            {
+                return Problem(statusCode: 409, title: "Email Already Associated to an Account");
+            }
+            var driver = new DriverProfile
+            {
+                LicenceNumber = request.LicenceNumber.Trim()
+            };
+            var user = new User
+            {
+                Email = email,
+                //PasswordHash = "",
+                FullName = request.FullName.Trim(),
+                Role = Role.Driver,
+                Phone = request.Phone.Trim(),
+                DriverProfile = driver
+            };
+            user.PasswordHash = _hasher.HashPassword(user, request.Password);
+            _context.Add(user);
+            try
+            {
+                await _context.SaveChangesAsync();
+            }
+            catch (DbUpdateException ex) when (ex.InnerException is PostgresException { SqlState: PostgresErrorCodes.UniqueViolation })
+            {
+
+                return Problem(statusCode: 409, title: "Email Already Associated to an Account");
+            }
+
+            RegisterDriverResponse res = new RegisterDriverResponse
+            {
+                Id = user.Id,
+                Email = user.Email,
+                Status = driver.Status,
+            };
+            return StatusCode(StatusCodes.Status201Created, res);
+        }
+    }
+}
