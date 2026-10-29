@@ -1,7 +1,9 @@
-﻿using Microsoft.AspNetCore.Identity;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Npgsql;
+using System.Collections;
 using Taxi.Api.Data;
 using Taxi.Api.DTO.Auth;
 using Taxi.Api.Models;
@@ -62,6 +64,24 @@ namespace Taxi.Api.Controller
                 Status = driver.Status,
             };
             return StatusCode(StatusCodes.Status201Created, res);
+        }
+
+        [Authorize(Roles =nameof(Role.Admin))]
+        [HttpGet("pending")]
+        public async Task<ActionResult<IEnumerable<PendingDriverResponse>>> PendingDrivers()
+        {
+            var pendingDrivers = await _context.DriverProfiles.Where(d => d.Status == ApprovalStatus.Pending).OrderBy(d => d.User.CreatedAt).Select(d => 
+            new PendingDriverResponse
+            {
+                UserId = d.UserId,
+                Email = d.User.Email,
+                FullName = d.User.FullName,
+                LicenceNumber = d.LicenceNumber,
+                Phone = d.User.Phone,
+                RegisteredAt = d.User.CreatedAt
+            }
+            ).ToListAsync();
+               return Ok(pendingDrivers);
         }
     }
 }

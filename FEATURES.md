@@ -78,13 +78,13 @@ Roles: **Customer**, **Driver**, **Admin**, **All** (any logged-in user), **Syst
 
 ### B. Drivers and vehicles
 
-- [ ] **Feature 1.011** — DriverProfile entity (1:1 with User) and migration  
+- [DONE] **Feature 1.011** — DriverProfile entity (1:1 with User) and migration  
        Role: Dev · Size: M (2) · Depends on: 1.004 · Stories: US-04  
        _Done when:_ DriverProfile table exists with ApprovalStatus, IsOnline, location fields and licence number.
-- [ ] **Feature 1.012** — Driver self-registration (status Pending)  
+- [DONE] **Feature 1.012** — Driver self-registration (status Pending)  
        Role: Driver · Size: M (2) · Depends on: 1.011, 1.005 · Stories: US-04  
        _Done when:_ Registering as a driver creates User + DriverProfile in one transaction.
-- [ ] **Feature 1.013** — Admin lists pending drivers  
+- [DONE] **Feature 1.013** — Admin lists pending drivers  
        Role: Admin · Size: S (1) · Depends on: 1.012, 1.008, 1.007 · Stories: US-05  
        _Done when:_ Only an admin sees the list; response uses a DTO.
 - [ ] **Feature 1.014** — Admin approves or rejects a driver  
