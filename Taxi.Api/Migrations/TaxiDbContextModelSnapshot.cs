@@ -95,6 +95,50 @@ namespace Taxi.Api.Migrations
                     b.ToTable("Users");
                 });
 
+            modelBuilder.Entity("Taxi.Api.Models.Vehicle", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("DriverProfileUserId")
+                        .HasColumnType("integer");
+
+                    b.Property<DateOnly>("InsuranceExpiryDate")
+                        .HasColumnType("date");
+
+                    b.Property<string>("InsuranceNumber")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<string>("Model")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("PlateNumber")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<int>("VehicleTypeId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DriverProfileUserId");
+
+                    b.HasIndex("PlateNumber")
+                        .IsUnique();
+
+                    b.HasIndex("VehicleTypeId");
+
+                    b.ToTable("Vehicles");
+                });
+
             modelBuilder.Entity("Taxi.Api.Models.VehicleType", b =>
                 {
                     b.Property<int>("Id")
@@ -182,6 +226,30 @@ namespace Taxi.Api.Migrations
                         .IsRequired();
 
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("Taxi.Api.Models.Vehicle", b =>
+                {
+                    b.HasOne("Taxi.Api.Models.DriverProfile", "Driver")
+                        .WithMany("Vehicles")
+                        .HasForeignKey("DriverProfileUserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Taxi.Api.Models.VehicleType", "VehicleType")
+                        .WithMany()
+                        .HasForeignKey("VehicleTypeId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Driver");
+
+                    b.Navigation("VehicleType");
+                });
+
+            modelBuilder.Entity("Taxi.Api.Models.DriverProfile", b =>
+                {
+                    b.Navigation("Vehicles");
                 });
 
             modelBuilder.Entity("Taxi.Api.Models.User", b =>

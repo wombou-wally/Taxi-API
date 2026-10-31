@@ -1,18 +1,19 @@
 using Microsoft.EntityFrameworkCore;
-using System.Net.NetworkInformation;
 using Taxi.Api.Models;
+
 namespace Taxi.Api.Data
 {
-
     public class TaxiDbContext : DbContext
     {
         public DbSet<User> Users { get; set; }
         public DbSet<DriverProfile> DriverProfiles { get; set; }
         public DbSet<VehicleType> VehicleTypes { get; set; }
+        public DbSet<Vehicle> Vehicles { get; set; }
+
         public TaxiDbContext(DbContextOptions<TaxiDbContext> options) : base(options)
         {
-
         }
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<User>(entity =>
@@ -52,6 +53,24 @@ namespace Taxi.Api.Data
                     new VehicleType { Id = 2, Name = "Comfort", Seats = 4, BaseFare = 5.00m, PricePerKm = 2.20m, PricePerMinute = 0.45m, MinimumFare = 9.00m, IsActive = true },
                     new VehicleType { Id = 3, Name = "XL", Seats = 6, BaseFare = 6.50m, PricePerKm = 2.80m, PricePerMinute = 0.55m, MinimumFare = 12.00m, IsActive = true }
                 );
+            });
+
+            modelBuilder.Entity<Vehicle>(entity =>
+            {
+                entity.HasIndex(v => v.PlateNumber).IsUnique();
+                entity.Property(v => v.Model).HasMaxLength(100);
+                entity.Property(v => v.PlateNumber).HasMaxLength(20);
+                entity.Property(v => v.InsuranceNumber).HasMaxLength(50);
+
+                entity.HasOne(v => v.Driver)
+                      .WithMany(d => d.Vehicles)
+                      .HasForeignKey(v => v.DriverProfileUserId)
+                      .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasOne(v => v.VehicleType)
+                      .WithMany()
+                      .HasForeignKey(v => v.VehicleTypeId)
+                      .OnDelete(DeleteBehavior.Restrict);
             });
         }
     }
