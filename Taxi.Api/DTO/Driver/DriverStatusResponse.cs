@@ -1,6 +1,6 @@
 ﻿using Taxi.Api.Models;
 
-namespace Taxi.Api.DTO
+namespace Taxi.Api.DTO.Driver
 {
     public class DriverStatusResponse
     {

@@ -5,8 +5,8 @@ using Microsoft.EntityFrameworkCore;
 using Npgsql;
 using System.Collections;
 using Taxi.Api.Data;
-using Taxi.Api.DTO;
 using Taxi.Api.DTO.Auth;
+using Taxi.Api.DTO.Driver;
 using Taxi.Api.Models;
 
 namespace Taxi.Api.Controller
