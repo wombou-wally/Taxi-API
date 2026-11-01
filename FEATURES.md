@@ -93,13 +93,13 @@ Roles: **Customer**, **Driver**, **Admin**, **All** (any logged-in user), **Syst
 - [DONE] **Feature 1.015** — VehicleType entity with seeded single type and prices  
        Role: Dev · Size: S (1) · Depends on: 1.002 · Stories: US-18  
        _Done when:_ One vehicle type with BaseFare, PricePerKm and MinimumFare exists after migration.
-- [ ] **Feature 1.016** — Admin edits vehicle type prices  
+- [DONE] **Feature 1.016** — Admin edits vehicle type prices  
        Role: Admin · Size: S (1) · Depends on: 1.015, 1.007, 1.008 · Stories: US-18  
        _Done when:_ Valid update persists; negative values rejected with 400.
-- [ ] **Feature 1.017** — Vehicle entity (plate, insurance number and expiry) and migration  
+- [DONE] **Feature 1.017** — Vehicle entity (plate, insurance number and expiry) and migration  
        Role: Dev · Size: M (2) · Depends on: 1.011, 1.015 · Stories: US-06  
        _Done when:_ Vehicle table exists with foreign keys to driver and vehicle type.
-- [ ] **Feature 1.018** — Driver adds and edits their own vehicle  
+- [DONE] **Feature 1.018** — Driver adds and edits their own vehicle  
        Role: Driver · Size: M (2) · Depends on: 1.017, 1.014 · Stories: US-06, US-21  
        _Done when:_ A driver reaches only their own vehicles; others return 404.
 - [ ] **Feature 1.019** — Driver goes online or offline with eligibility checks  
