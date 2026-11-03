@@ -21,12 +21,14 @@ builder.Services.AddOpenApi();
 builder.Services.AddDbContext<TaxiDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 builder.Services.AddScoped<IPasswordHasher<User>, PasswordHasher<User>>();
+builder.Services.AddSingleton<IDistanceService, HaversineDistanceService>();
 builder.Services.AddScoped<JwtTokenService>();
 var jwtKey = builder.Configuration["Jwt:Key"];
 if (string.IsNullOrEmpty(jwtKey) || jwtKey.Length < 32)
 {
     throw new InvalidOperationException("JWT Key is missing or shorter than the required 32 characters.");
 }
+
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
