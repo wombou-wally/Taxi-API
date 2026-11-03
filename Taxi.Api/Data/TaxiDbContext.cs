@@ -36,6 +36,10 @@ namespace Taxi.Api.Data
 
                 entity.Property(d => d.Status).HasConversion<string>();
                 entity.Property(d => d.LicenceNumber).HasMaxLength(50);
+                entity.HasOne(d => d.ActiveVehicle)
+                      .WithMany()
+                      .HasForeignKey(d => d.ActiveVehicleId)
+                      .OnDelete(DeleteBehavior.SetNull);
             });
 
             modelBuilder.Entity<VehicleType>(entity =>

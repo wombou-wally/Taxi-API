@@ -10,7 +10,8 @@
         public double? CurrentLongitude { get; set; }
         public DateTime? LocationUpdatedAt { get; set; }
         public string LicenceNumber { get; set; } = string.Empty;
-
+        public int? ActiveVehicleId { get; set; }
+        public Vehicle? ActiveVehicle { get; set; }
         public List<Vehicle> Vehicles { get; set; } = new();
     }
 }

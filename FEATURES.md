@@ -102,7 +102,7 @@ Roles: **Customer**, **Driver**, **Admin**, **All** (any logged-in user), **Syst
 - [DONE] **Feature 1.018** — Driver adds and edits their own vehicle  
        Role: Driver · Size: M (2) · Depends on: 1.017, 1.014 · Stories: US-06, US-21  
        _Done when:_ A driver reaches only their own vehicles; others return 404.
-- [ ] **Feature 1.019** — Driver goes online or offline with eligibility checks  
+- [DONE] **Feature 1.019** — Driver goes online or offline with eligibility checks  
        Role: Driver · Size: M (2) · Depends on: 1.018 · Stories: US-07  
        _Done when:_ Refused when not approved, no active vehicle or insurance expired.
 - [ ] **Feature 1.020** — Driver updates current location  

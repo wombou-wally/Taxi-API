@@ -1,8 +1,9 @@
-﻿using System.Net;
+﻿using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
+using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.Extensions.DependencyInjection;
 using Taxi.Api.Data;
 using Taxi.Api.DTO.Auth;
 using Taxi.Api.Models;
@@ -68,5 +69,42 @@ public static class TestHelpers
             request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
         }
         return await client.SendAsync(request);
+    }
+    // Marks a driver as Approved directly in the test database.
+    public static async Task ApproveDriverAsync(TaxiApiFactory factory, int driverUserId)
+    {
+        using var scope = factory.Services.CreateScope();
+        var context = scope.ServiceProvider.GetRequiredService<TaxiDbContext>();
+
+        var profile = await context.DriverProfiles.SingleAsync(d => d.UserId == driverUserId);
+        profile.Status = ApprovalStatus.Approved;
+        await context.SaveChangesAsync();
+    }
+
+    // Creates a vehicle directly in the test database (lets tests use an expired insurance date).
+    public static async Task<int> CreateVehicleAsync(TaxiApiFactory factory, int driverUserId, DateOnly? insuranceExpiry = null)
+    {
+        using var scope = factory.Services.CreateScope();
+        var context = scope.ServiceProvider.GetRequiredService<TaxiDbContext>();
+
+        var vehicle = new Vehicle
+        {
+            Model = "Test Car",
+            PlateNumber = ("T" + Guid.NewGuid().ToString("N"))[..12].ToUpperInvariant(),
+            InsuranceNumber = "INS-TEST",
+            InsuranceExpiryDate = insuranceExpiry ?? DateOnly.FromDateTime(DateTime.UtcNow).AddYears(1),
+            DriverProfileUserId = driverUserId,
+            VehicleTypeId = 1
+        };
+        context.Vehicles.Add(vehicle);
+        await context.SaveChangesAsync();
+        return vehicle.Id;
+    }
+
+    public static async Task<DriverProfile> GetProfileAsync(TaxiApiFactory factory, int driverUserId)
+    {
+        using var scope = factory.Services.CreateScope();
+        var context = scope.ServiceProvider.GetRequiredService<TaxiDbContext>();
+        return await context.DriverProfiles.AsNoTracking().SingleAsync(d => d.UserId == driverUserId);
     }
 }

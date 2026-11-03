@@ -114,10 +114,20 @@ namespace Taxi.Api.Controller
         [HttpDelete("vehicle/{id:int}")]
         public async Task<IActionResult> Delete(int id)
         {
+            int userid = User.GetUserId();
             var vehicle = await FindMyVehicleAsync(id);
+            var driver = await _context.DriverProfiles.FirstOrDefaultAsync(d => d.UserId == userid);
             if (vehicle == null)
             {
                 return Problem(statusCode: 404, title: "Vehicle does not exist");
+            }
+            if (driver == null)
+            {
+                return Problem(statusCode: 409, title: "Not found driver");
+            }
+            if(vehicle.Id == driver.ActiveVehicleId)
+            {
+                return Problem(statusCode: 409, title: "Go offline before deleting this vehicle");
             }
 
             _context.Vehicles.Remove(vehicle);

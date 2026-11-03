@@ -27,6 +27,9 @@ namespace Taxi.Api.Migrations
                     b.Property<int>("UserId")
                         .HasColumnType("integer");
 
+                    b.Property<int?>("ActiveVehicleId")
+                        .HasColumnType("integer");
+
                     b.Property<double?>("CurrentLatitude")
                         .HasColumnType("double precision");
 
@@ -49,6 +52,8 @@ namespace Taxi.Api.Migrations
                         .HasColumnType("text");
 
                     b.HasKey("UserId");
+
+                    b.HasIndex("ActiveVehicleId");
 
                     b.ToTable("DriverProfiles");
                 });
@@ -219,11 +224,18 @@ namespace Taxi.Api.Migrations
 
             modelBuilder.Entity("Taxi.Api.Models.DriverProfile", b =>
                 {
+                    b.HasOne("Taxi.Api.Models.Vehicle", "ActiveVehicle")
+                        .WithMany()
+                        .HasForeignKey("ActiveVehicleId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
                     b.HasOne("Taxi.Api.Models.User", "User")
                         .WithOne("DriverProfile")
                         .HasForeignKey("Taxi.Api.Models.DriverProfile", "UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("ActiveVehicle");
 
                     b.Navigation("User");
                 });

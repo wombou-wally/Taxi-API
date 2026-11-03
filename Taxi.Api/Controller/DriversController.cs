@@ -7,6 +7,7 @@ using System.Collections;
 using Taxi.Api.Data;
 using Taxi.Api.DTO.Auth;
 using Taxi.Api.DTO.Driver;
+using Taxi.Api.Infrastructure;
 using Taxi.Api.Models;
 
 namespace Taxi.Api.Controller
@@ -129,6 +130,64 @@ namespace Taxi.Api.Controller
                 Status = driver.Status,
             };
             return Ok(response);
+        }
+
+        [Authorize(Roles = nameof(Role.Driver))]
+        [HttpPost("online")]
+        public async Task<ActionResult<DriverAvailabilityResponse>> Online(GoOnlineRequest request)
+        {
+            int id = User.GetUserId();
+            var driver = await _context.DriverProfiles.FirstOrDefaultAsync(r => r.UserId == id);
+            var vehicle = await _context.Vehicles.FirstOrDefaultAsync(v => v.Id == request.VehicleId && v.DriverProfileUserId == id);
+
+            
+            if(driver == null)
+            {
+                return Problem(statusCode: 404, title: "Driver not found");
+            }
+            if (driver.Status != ApprovalStatus.Approved)
+            {
+                return Problem(statusCode: 403, title: "Driver has not been approved yet");
+            }
+            if (vehicle == null)
+            {
+                return Problem(statusCode: 404, title: "Vehicle not found");
+            }
+            if (vehicle.InsuranceExpiryDate <= DateOnly.FromDateTime(DateTime.UtcNow))
+            {
+                return Problem(statusCode: 409, title: "Vehicle Insurance Expiry Date passed");
+            }
+            driver.ActiveVehicleId = request.VehicleId;
+            driver.IsOnline = true;
+            await _context.SaveChangesAsync();
+            var response = new DriverAvailabilityResponse
+            {
+                IsOnline = driver.IsOnline,
+                VehicleId = driver.ActiveVehicleId
+            };
+            return Ok(response);
+        }
+        [Authorize(Roles = nameof(Role.Driver))]
+        [HttpPost("offline")]
+        public async Task<ActionResult<DriverAvailabilityResponse>> Offline()
+        {
+            int id = User.GetUserId();
+            var driver = await _context.DriverProfiles.FirstOrDefaultAsync(d => d.UserId == id);
+
+            if(driver != null)
+            {
+                driver.IsOnline = false;
+                driver.ActiveVehicleId = null;
+                await _context.SaveChangesAsync();
+                var response = new DriverAvailabilityResponse
+                {
+                    IsOnline = driver.IsOnline,
+                    VehicleId = driver.ActiveVehicleId
+                };
+                return Ok(response);
+                
+            }
+            return Problem(statusCode: 404, title: "Driver not found");
         }
     }
 }
