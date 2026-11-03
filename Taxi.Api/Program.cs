@@ -21,6 +21,7 @@ builder.Services.AddOpenApi();
 builder.Services.AddDbContext<TaxiDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 builder.Services.AddScoped<IPasswordHasher<User>, PasswordHasher<User>>();
+builder.Services.AddSingleton<IFareService, FareService>();
 builder.Services.AddSingleton<IDistanceService, HaversineDistanceService>();
 builder.Services.AddScoped<JwtTokenService>();
 var jwtKey = builder.Configuration["Jwt:Key"];

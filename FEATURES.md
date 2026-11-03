@@ -114,7 +114,7 @@ Roles: **Customer**, **Driver**, **Admin**, **All** (any logged-in user), **Syst
 - [DONE] **Feature 1.021** — IDistanceService with Haversine implementation  
        Role: Dev · Size: S (1) · Depends on: 1.001 · Stories: US-09  
        _Done when:_ Known city pairs return the expected kilometres within a small tolerance.
-- [ ] **Feature 1.022** — Fare calculation service: max(MinimumFare, BaseFare + PricePerKm x km)  
+- [DONE] **Feature 1.022** — Fare calculation service: max(MinimumFare, BaseFare + PricePerKm x km)  
        Role: Dev · Size: M (2) · Depends on: 1.015, 1.021 · Stories: US-09  
        _Done when:_ Calculator reads prices from the database, not constants.
 - [ ] **Feature 1.023** — Unit tests for distance and fare calculation  
