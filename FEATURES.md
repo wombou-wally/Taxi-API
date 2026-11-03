@@ -105,7 +105,7 @@ Roles: **Customer**, **Driver**, **Admin**, **All** (any logged-in user), **Syst
 - [DONE] **Feature 1.019** — Driver goes online or offline with eligibility checks  
        Role: Driver · Size: M (2) · Depends on: 1.018 · Stories: US-07  
        _Done when:_ Refused when not approved, no active vehicle or insurance expired.
-- [ ] **Feature 1.020** — Driver updates current location  
+- [DONE] **Feature 1.020** — Driver updates current location  
        Role: Driver · Size: S (1) · Depends on: 1.019 · Stories: US-08  
        _Done when:_ Latitude and longitude validated and stored with LocationUpdatedAt.
 

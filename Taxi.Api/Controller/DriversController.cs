@@ -178,6 +178,9 @@ namespace Taxi.Api.Controller
             {
                 driver.IsOnline = false;
                 driver.ActiveVehicleId = null;
+                driver.CurrentLatitude = null;
+                driver.CurrentLongitude = null;
+                driver.LocationUpdatedAt = null;
                 await _context.SaveChangesAsync();
                 var response = new DriverAvailabilityResponse
                 {
@@ -188,6 +191,27 @@ namespace Taxi.Api.Controller
                 
             }
             return Problem(statusCode: 404, title: "Driver not found");
+        }
+        [Authorize(Roles = nameof(Role.Driver))]
+        [HttpPut("location")]
+        public async Task<ActionResult> UpdateLocation(UpdateLocationRequest request)
+        {
+            int id = User.GetUserId();
+            var existing = await _context.DriverProfiles.FirstOrDefaultAsync(d => d.UserId == id);
+
+            if(existing == null)
+            {
+                return Problem(statusCode: 404, title: "Driver not found");
+            }
+            if(existing.IsOnline == false)
+            {
+                return Problem(statusCode: 409, title: "Driver not Online");
+            }
+            existing.CurrentLatitude = request.Latitude;
+            existing.CurrentLongitude = request.Longitude;
+            existing.LocationUpdatedAt = DateTime.UtcNow;
+            await _context.SaveChangesAsync();
+            return NoContent();
         }
     }
 }
