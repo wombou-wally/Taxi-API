@@ -126,7 +126,7 @@ Roles: **Customer**, **Driver**, **Admin**, **All** (any logged-in user), **Syst
 
 ### D. Ride lifecycle
 
-- [ ] **Feature 1.025** — Ride entity, RideStatus enum and migration  
+- [DONE] **Feature 1.025** — Ride entity, RideStatus enum and migration  
        Role: Dev · Size: M (2) · Depends on: 1.004, 1.015, 1.017 · Stories: US-10  
        _Done when:_ Ride table exists with all timestamps, estimated and final fare.
 - [ ] **Feature 1.026** — Central 'visible rides' query enforcing ownership  

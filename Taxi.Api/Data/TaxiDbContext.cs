@@ -9,6 +9,7 @@ namespace Taxi.Api.Data
         public DbSet<DriverProfile> DriverProfiles { get; set; }
         public DbSet<VehicleType> VehicleTypes { get; set; }
         public DbSet<Vehicle> Vehicles { get; set; }
+        public DbSet<Ride> Rides { get; set; }
 
         public TaxiDbContext(DbContextOptions<TaxiDbContext> options) : base(options)
         {
@@ -36,6 +37,7 @@ namespace Taxi.Api.Data
 
                 entity.Property(d => d.Status).HasConversion<string>();
                 entity.Property(d => d.LicenceNumber).HasMaxLength(50);
+
                 entity.HasOne(d => d.ActiveVehicle)
                       .WithMany()
                       .HasForeignKey(d => d.ActiveVehicleId)
@@ -75,6 +77,44 @@ namespace Taxi.Api.Data
                       .WithMany()
                       .HasForeignKey(v => v.VehicleTypeId)
                       .OnDelete(DeleteBehavior.Restrict);
+            });
+
+            modelBuilder.Entity<Ride>(entity =>
+            {
+                entity.Property(r => r.Status).HasConversion<string>();
+                entity.Property(r => r.CancelledBy).HasConversion<string>();
+                entity.Property(r => r.EstimatedFare).HasPrecision(10, 2);
+                entity.Property(r => r.FinalFare).HasPrecision(10, 2);
+                entity.Property(r => r.CancelReason).HasMaxLength(200);
+
+                // Rides are history: deleting a user, driver or vehicle type must never delete them.
+                entity.HasOne(r => r.Customer)
+                      .WithMany()
+                      .HasForeignKey(r => r.CustomerId)
+                      .OnDelete(DeleteBehavior.Restrict);
+
+                entity.HasOne(r => r.Driver)
+                      .WithMany()
+                      .HasForeignKey(r => r.DriverProfileUserId)
+                      .OnDelete(DeleteBehavior.Restrict);
+
+                entity.HasOne(r => r.VehicleType)
+                      .WithMany()
+                      .HasForeignKey(r => r.VehicleTypeId)
+                      .OnDelete(DeleteBehavior.Restrict);
+
+                // A vehicle can be deleted by its driver; the ride keeps its type and fares.
+                entity.HasOne(r => r.Vehicle)
+                      .WithMany()
+                      .HasForeignKey(r => r.VehicleId)
+                      .OnDelete(DeleteBehavior.SetNull);
+
+                entity.HasIndex(r => r.Status);
+
+                // One active ride per customer, guaranteed by the database.
+                entity.HasIndex(r => r.CustomerId)
+                      .IsUnique()
+                      .HasFilter("\"Status\" IN ('Requested', 'Accepted', 'InProgress')");
             });
         }
     }

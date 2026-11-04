@@ -58,6 +58,89 @@ namespace Taxi.Api.Migrations
                     b.ToTable("DriverProfiles");
                 });
 
+            modelBuilder.Entity("Taxi.Api.Models.Ride", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime?>("AcceptedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("CancelReason")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<DateTime?>("CancelledAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("CancelledBy")
+                        .HasColumnType("text");
+
+                    b.Property<DateTime?>("CompletedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("CustomerId")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("DriverProfileUserId")
+                        .HasColumnType("integer");
+
+                    b.Property<double>("DropoffLatitude")
+                        .HasColumnType("double precision");
+
+                    b.Property<double>("DropoffLongitude")
+                        .HasColumnType("double precision");
+
+                    b.Property<decimal>("EstimatedFare")
+                        .HasPrecision(10, 2)
+                        .HasColumnType("numeric(10,2)");
+
+                    b.Property<decimal?>("FinalFare")
+                        .HasPrecision(10, 2)
+                        .HasColumnType("numeric(10,2)");
+
+                    b.Property<double>("PickupLatitude")
+                        .HasColumnType("double precision");
+
+                    b.Property<double>("PickupLongitude")
+                        .HasColumnType("double precision");
+
+                    b.Property<DateTime>("RequestedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("StartedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int?>("VehicleId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("VehicleTypeId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CustomerId")
+                        .IsUnique()
+                        .HasFilter("\"Status\" IN ('Requested', 'Accepted', 'InProgress')");
+
+                    b.HasIndex("DriverProfileUserId");
+
+                    b.HasIndex("Status");
+
+                    b.HasIndex("VehicleId");
+
+                    b.HasIndex("VehicleTypeId");
+
+                    b.ToTable("Rides");
+                });
+
             modelBuilder.Entity("Taxi.Api.Models.User", b =>
                 {
                     b.Property<int>("Id")
@@ -238,6 +321,39 @@ namespace Taxi.Api.Migrations
                     b.Navigation("ActiveVehicle");
 
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("Taxi.Api.Models.Ride", b =>
+                {
+                    b.HasOne("Taxi.Api.Models.User", "Customer")
+                        .WithMany()
+                        .HasForeignKey("CustomerId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Taxi.Api.Models.DriverProfile", "Driver")
+                        .WithMany()
+                        .HasForeignKey("DriverProfileUserId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("Taxi.Api.Models.Vehicle", "Vehicle")
+                        .WithMany()
+                        .HasForeignKey("VehicleId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("Taxi.Api.Models.VehicleType", "VehicleType")
+                        .WithMany()
+                        .HasForeignKey("VehicleTypeId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Customer");
+
+                    b.Navigation("Driver");
+
+                    b.Navigation("Vehicle");
+
+                    b.Navigation("VehicleType");
                 });
 
             modelBuilder.Entity("Taxi.Api.Models.Vehicle", b =>
