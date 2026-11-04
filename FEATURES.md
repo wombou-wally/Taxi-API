@@ -117,10 +117,10 @@ Roles: **Customer**, **Driver**, **Admin**, **All** (any logged-in user), **Syst
 - [DONE] **Feature 1.022** — Fare calculation service: max(MinimumFare, BaseFare + PricePerKm x km)  
        Role: Dev · Size: M (2) · Depends on: 1.015, 1.021 · Stories: US-09  
        _Done when:_ Calculator reads prices from the database, not constants.
-- [ ] **Feature 1.023** — Unit tests for distance and fare calculation  
+- [DONE] **Feature 1.023** — Unit tests for distance and fare calculation  
        Role: Dev · Size: S (1) · Depends on: 1.022 · Stories: US-09  
        _Done when:_ Tests cover zero distance, minimum fare and a long trip.
-- [ ] **Feature 1.024** — Fare estimate endpoint  
+- [DONE] **Feature 1.024** — Fare estimate endpoint  
        Role: Customer · Size: S (1) · Depends on: 1.022, 1.007 · Stories: US-09  
        _Done when:_ Returns distance and fare for a pickup and dropoff.
 
