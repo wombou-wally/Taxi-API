@@ -221,6 +221,33 @@ namespace Taxi.Api.Controller
                 .FirstAsync(r => r.Id == id);
             return Ok(ToResponse(ride, ride.VehicleType.Name));
         }
+        [HttpPost("{id:int}/start")]
+        [Authorize(Roles = nameof(Role.Driver))]
+        public async Task<ActionResult<RideResponse>> StartRide(int id)
+        {
+            int change;
+            int driverId = User.GetUserId();
+            change = await _context.Rides.Where(r => r.Id == id && r.DriverProfileUserId == driverId && r.Status == RideStatus.Accepted)
+               .ExecuteUpdateAsync(s => s
+                   .SetProperty(r => r.Status, RideStatus.InProgress)
+                   .SetProperty(r => r.StartedAt, DateTime.UtcNow)
+               );
+            if (change == 0)
+            {
+                var exists = await _context.Rides.AsNoTracking().AnyAsync(r => r.Id == id && r.DriverProfileUserId == driverId);
+
+                if (!exists)
+                {
+                    return Problem(statusCode: 404, title: "Ride not found");
+                }
+                return Problem(statusCode: 409, title: "Ride cannot be started");
+            }
+
+            var ride = await _context.Rides.Include(r => r.VehicleType)
+                .FirstAsync(r => r.Id == id);
+            return Ok(ToResponse(ride, ride.VehicleType.Name));
+
+        }
 
         private static bool IsUniqueViolation(Exception ex)
         {
@@ -234,23 +261,23 @@ namespace Taxi.Api.Controller
                 .FirstOrDefaultAsync(d => d.UserId == driverId);
             if (driver == null)
             {
-                return (null,Problem(statusCode: 404, title: "Driver profile not found"));
+                return (null, Problem(statusCode: 404, title: "Driver profile not found"));
             }
             if (driver.Status != ApprovalStatus.Approved)
             {
-                return (null,Problem(statusCode: 403, title: "Your driver account is not approved"));
+                return (null, Problem(statusCode: 403, title: "Your driver account is not approved"));
             }
             if (!driver.IsOnline)
             {
-                return (null,Problem(statusCode: 409, title: "Go online to see rides"));
+                return (null, Problem(statusCode: 409, title: "Go online to see rides"));
             }
             if (driver.CurrentLatitude == null || driver.CurrentLongitude == null)
             {
-                return (null,Problem(statusCode: 409, title: "Share your location to see rides"));
+                return (null, Problem(statusCode: 409, title: "Share your location to see rides"));
             }
             if (driver.ActiveVehicle == null)
             {
-                return (null,Problem(statusCode: 409, title: "Select an active vehicle to see rides"));
+                return (null, Problem(statusCode: 409, title: "Select an active vehicle to see rides"));
             }
             return (driver, null);
         }

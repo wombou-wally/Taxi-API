@@ -150,7 +150,7 @@ Roles: **Customer**, **Driver**, **Admin**, **All** (any logged-in user), **Syst
 - [DONE] **Feature 1.032** — Driver accepts a ride (first accept wins)  
        Role: Driver · Size: L (3) · Depends on: 1.031, 1.020 · Stories: US-13  
        _Done when:_ Single conditional update or concurrency token; loser gets 409; one active ride per driver.
-- [ ] **Feature 1.033** — Driver starts a ride  
+- [DONE] **Feature 1.033** — Driver starts a ride  
        Role: Driver · Size: S (1) · Depends on: 1.032 · Stories: US-14  
        _Done when:_ Only the assigned driver, only from Accepted; StartedAt set.
 - [ ] **Feature 1.034** — Driver completes a ride and final fare is stored  
