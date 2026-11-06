@@ -166,7 +166,7 @@ Roles: **Customer**, **Driver**, **Admin**, **All** (any logged-in user), **Syst
        Role: Admin · Size: S (1) · Depends on: 1.026, 1.008 · Stories: US-17  
        _Done when:_ Admin sees every ride; other roles get 403.
 - [ ] **Feature 1.038** — Integration tests: full ride lifecycle and double accept  
-       Role: Dev · Size: L (3) · Depends on: 1.034, 1.035, 1.036 · Stories: US-13, US-14  
+       Role: Dev · Size: L (3) · Depends on: 1.034, 1.035, 1.036 · Stories: US-13, US-14
        _Done when:_ Request, accept, start, complete passes; two simultaneous accepts yield one 409.
 
 ### E. Payments and notifications
