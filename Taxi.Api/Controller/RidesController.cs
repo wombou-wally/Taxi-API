@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.EntityFrameworkCore;
 using Npgsql;
 using Taxi.Api.Data;
@@ -251,17 +252,17 @@ namespace Taxi.Api.Controller
         }
         [HttpPost("{id:int}/complete")]
         [Authorize(Roles = nameof(Role.Driver))]
-        public async Task<ActionResult<RideResponse>> Complete(int id)
+        public async Task<ActionResult<RideResponse>> Complete(int id, [FromBody(EmptyBodyBehavior = EmptyBodyBehavior.Allow)] CancelRideRequest? request)
         {
             int driverId = User.GetUserId();
             var exist = await _context.Rides.AsNoTracking()
                 .Include(r => r.VehicleType)
                 .FirstOrDefaultAsync(r => r.Id == id && r.DriverProfileUserId == driverId);
-            if(exist == null)
+            if (exist == null)
             {
                 return Problem(statusCode: 404, title: "ride not found");
             }
-            if(exist.Status != RideStatus.InProgress)
+            if (exist.Status != RideStatus.InProgress)
             {
                 return Problem(statusCode: 409, title: "ride can't be completed");
             }
@@ -269,8 +270,8 @@ namespace Taxi.Api.Controller
             var started = exist.StartedAt ?? DateTime.UtcNow;
             var minutes = (DateTime.UtcNow - started).TotalMinutes;
             minutes = Math.Max(1, Math.Ceiling(minutes));
-            var distance = _distanceService.DistanceKm(exist.PickupLatitude, exist.PickupLongitude,exist.DropoffLatitude, exist.DropoffLongitude);
-            var fare = _fareService.CalculateFare(exist.VehicleType, distance,minutes);
+            var distance = _distanceService.DistanceKm(exist.PickupLatitude, exist.PickupLongitude, exist.DropoffLatitude, exist.DropoffLongitude);
+            var fare = _fareService.CalculateFare(exist.VehicleType, distance, minutes);
             fare = Math.Min(fare, exist.EstimatedFare * MaxFareMultiplier);
 
             var changed = await _context.Rides.Where(r => r.Id == id && r.DriverProfileUserId == driverId && r.Status == RideStatus.InProgress)
@@ -279,11 +280,50 @@ namespace Taxi.Api.Controller
                 .SetProperty(s => s.CompletedAt, DateTime.UtcNow)
                 .SetProperty(s => s.FinalFare, fare)
                 );
-            if(changed == 0)
+            if (changed == 0)
             {
                 return Problem(statusCode: 409, title: "ride can't be completed");
             }
             var ride = await _context.Rides.Include(r => r.VehicleType)
+                .FirstAsync(r => r.Id == id);
+            return Ok(ToResponse(ride, ride.VehicleType.Name));
+        }
+        [HttpPost("{id:int}/cancel")]
+        [Authorize(Roles = nameof(Role.Customer))]
+
+        public async Task<ActionResult<RideResponse>> CancelRide(int id, [FromBody(EmptyBodyBehavior = EmptyBodyBehavior.Allow)] CancelRideRequest? request)
+        {
+            int customerId = User.GetUserId();
+
+            var reason = request?.Reason?.Trim();
+            if (string.IsNullOrEmpty(reason))
+            {
+                reason = null;
+            }
+
+            int changed = await _context.Rides
+                .Where(r => r.Id == id
+                            && r.CustomerId == customerId
+                            && (r.Status == RideStatus.Requested || r.Status == RideStatus.Accepted))
+                .ExecuteUpdateAsync(s => s
+                    .SetProperty(r => r.Status, RideStatus.Cancelled)
+                    .SetProperty(r => r.CancelledAt, DateTime.UtcNow)
+                    .SetProperty(r => r.CancelledBy, Role.Customer)
+                    .SetProperty(r => r.CancelReason, reason));
+
+            if (changed == 0)
+            {
+                var exists = await _context.Rides.AsNoTracking()
+                    .AnyAsync(r => r.Id == id && r.CustomerId == customerId);
+                if (!exists)
+                {
+                    return Problem(statusCode: 404, title: "Ride not found");
+                }
+                return Problem(statusCode: 409, title: "Ride cannot be cancelled");
+            }
+
+            var ride = await _context.Rides.AsNoTracking()
+                .Include(r => r.VehicleType)
                 .FirstAsync(r => r.Id == id);
             return Ok(ToResponse(ride, ride.VehicleType.Name));
         }
@@ -334,6 +374,9 @@ namespace Taxi.Api.Controller
                 FinalFare = ride.FinalFare,
                 RequestedAt = ride.RequestedAt,
                 CompletedAt = ride.CompletedAt,
+                CancelledAt = ride.CancelledAt,
+                CancelledBy = ride.CancelledBy?.ToString(),
+                CancelReason = ride.CancelReason,
                 Status = ride.Status.ToString(),
                 VehicleTypeId = ride.VehicleTypeId,
 

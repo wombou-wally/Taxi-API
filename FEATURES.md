@@ -153,10 +153,10 @@ Roles: **Customer**, **Driver**, **Admin**, **All** (any logged-in user), **Syst
 - [DONE] **Feature 1.033** — Driver starts a ride  
        Role: Driver · Size: S (1) · Depends on: 1.032 · Stories: US-14  
        _Done when:_ Only the assigned driver, only from Accepted; StartedAt set.
-- [ ] **Feature 1.034** — Driver completes a ride and final fare is stored  
+- [DONE] **Feature 1.034** — Driver completes a ride and final fare is stored  
        Role: Driver · Size: M (2) · Depends on: 1.033, 1.022 · Stories: US-14  
        _Done when:_ Only from InProgress; CompletedAt and FinalFare set.
-- [ ] **Feature 1.035** — Customer cancels a ride  
+- [DONE] **Feature 1.035** — Customer cancels a ride  
        Role: Customer · Size: M (2) · Depends on: 1.027, 1.032 · Stories: US-15  
        _Done when:_ Allowed from Requested or Accepted; blocked once InProgress.
 - [ ] **Feature 1.036** — Driver cancels an accepted ride (returns it to Requested)  

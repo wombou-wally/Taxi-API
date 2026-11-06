@@ -16,5 +16,8 @@ namespace Taxi.Api.DTO.Ride
         public DateTime RequestedAt { get; set; }
         public decimal? FinalFare { get; set; }
         public DateTime? CompletedAt { get; set; }
+        public DateTime? CancelledAt { get; set; }
+        public string? CancelledBy { get; set; }
+        public string? CancelReason { get; set; }
     }
 }
