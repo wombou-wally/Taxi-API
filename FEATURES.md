@@ -141,10 +141,10 @@ Roles: **Customer**, **Driver**, **Admin**, **All** (any logged-in user), **Syst
 - [DONE] **Feature 1.029** — Ride status endpoint suitable for polling  
        Role: Customer · Size: S (1) · Depends on: 1.028 · Stories: US-11  
        _Done when:_ Customer sees status changes within a normal polling interval.
-- [ ] **Feature 1.030** — Tests: customer A cannot read customer B's ride  
+- [DONE] **Feature 1.030** — Tests: customer A cannot read customer B's ride  
        Role: Dev · Size: M (2) · Depends on: 1.028 · Stories: US-21  
        _Done when:_ Test fails if the ownership filter is removed.
-- [ ] **Feature 1.031** — Driver lists available rides  
+- [DONE] **Feature 1.031** — Driver lists available rides  
        Role: Driver · Size: S (1) · Depends on: 1.026, 1.019 · Stories: US-12  
        _Done when:_ Only Requested rides are shown, only to online approved drivers.
 - [ ] **Feature 1.032** — Driver accepts a ride (first accept wins)  

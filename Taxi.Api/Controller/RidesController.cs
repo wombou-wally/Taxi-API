@@ -18,6 +18,8 @@ namespace Taxi.Api.Controller
         private readonly IFareService _fareService;
         private readonly IDistanceService _distanceService;
         private const double Speed = 25;
+        private const double SearchRadiusKm = 10.0;
+        private const int MaxCandidates = 200;
         public RidesController(TaxiDbContext context, IFareService fareService, IDistanceService distanceService)
         {
             _context = context;
@@ -106,11 +108,81 @@ namespace Taxi.Api.Controller
                 .VisibleTo(userId, role)
                 .Include(r => r.VehicleType)
                 .FirstOrDefaultAsync(r => r.Id == id);
-            if(ride == null)
+            if (ride == null)
             {
-               return Problem(statusCode: 404, title: "Ride not found");
+                return Problem(statusCode: 404, title: "Ride not found");
             }
             return Ok(ToResponse(ride, ride.VehicleType.Name));
+        }
+        [HttpGet("available")]
+        [Authorize(Roles = nameof(Role.Driver))]
+        public async Task<ActionResult<IEnumerable<AvailableRideResponse>>> GetAvailableRides(int limit = 20)
+        {
+            int driverId = User.GetUserId();
+            if (limit < 1 || limit > 50)
+            {
+                return Problem(statusCode: 400, title: "Limit must be between 1 and 50");
+            }
+            var driver = await _context.DriverProfiles.AsNoTracking()
+                .Include(d => d.ActiveVehicle)
+                .FirstOrDefaultAsync(d => d.UserId == driverId);
+            if (driver == null)
+            {
+                return Problem(statusCode: 404, title: "Driver profile not found");
+            }
+            if (driver.Status != ApprovalStatus.Approved)
+            {
+                return Problem(statusCode: 403, title: "Your driver account is not approved");
+            }
+            if (!driver.IsOnline)
+            {
+                return Problem(statusCode: 409, title: "Go online to see rides");
+            }
+            if (driver.CurrentLatitude == null || driver.CurrentLongitude == null)
+            {
+                return Problem(statusCode: 409, title: "Share your location to see rides");
+            }
+            if (driver.ActiveVehicle == null)
+            {
+                return Problem(statusCode: 409, title: "Select an active vehicle to see rides");
+            }
+            double driverLat = driver.CurrentLatitude.Value;
+            double driverLon = driver.CurrentLongitude.Value;
+            int vehicleTypeId = driver.ActiveVehicle.VehicleTypeId;
+
+            var candidates = await _context.Rides.AsNoTracking()
+                .Where(r => r.Status == RideStatus.Requested
+                            && r.DriverProfileUserId == null
+                            && r.VehicleTypeId == vehicleTypeId)
+                .Include(r => r.VehicleType)
+                .OrderByDescending(r => r.RequestedAt)
+                .Take(MaxCandidates)
+                .ToListAsync();
+
+            var response = candidates
+                .Select(r => new
+                {
+                    Ride = r,
+                    Distance = _distanceService.DistanceKm(driverLat, driverLon, r.PickupLatitude, r.PickupLongitude)
+                })
+                .Where(x => x.Distance <= SearchRadiusKm)
+                .OrderBy(x => x.Distance)
+                .Take(limit)
+                .Select(x => new AvailableRideResponse
+                {
+                    Id = x.Ride.Id,
+                    VehicleTypeName = x.Ride.VehicleType.Name,
+                    PickupLat = x.Ride.PickupLatitude,
+                    PickupLog = x.Ride.PickupLongitude,
+                    DropoffLat = x.Ride.DropoffLatitude,
+                    DropoffLog = x.Ride.DropoffLongitude,
+                    EstimatedFare = x.Ride.EstimatedFare,
+                    DistanceToPickupKm = Math.Round(x.Distance, 1),
+                    RequestedAt = x.Ride.RequestedAt
+                })
+                .ToList();
+
+            return Ok(response);
         }
         private static RideResponse ToResponse(Ride ride, string vehicleTypeName)
         {
