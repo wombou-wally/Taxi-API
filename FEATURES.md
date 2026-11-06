@@ -135,10 +135,10 @@ Roles: **Customer**, **Driver**, **Admin**, **All** (any logged-in user), **Syst
 - [DONE] **Feature 1.027** — Customer requests a ride  
        Role: Customer · Size: M (2) · Depends on: 1.025, 1.024, 1.007 · Stories: US-10  
        _Done when:_ Ride saved as Requested with estimated fare; second open ride rejected with 409.
-- [ ] **Feature 1.028** — Customer lists and views own rides  
+- [DONE] **Feature 1.028** — Customer lists and views own rides  
        Role: Customer · Size: S (1) · Depends on: 1.026, 1.027 · Stories: US-11  
        _Done when:_ Another customer's ride id returns 404.
-- [ ] **Feature 1.029** — Ride status endpoint suitable for polling  
+- [DONE] **Feature 1.029** — Ride status endpoint suitable for polling  
        Role: Customer · Size: S (1) · Depends on: 1.028 · Stories: US-11  
        _Done when:_ Customer sees status changes within a normal polling interval.
 - [ ] **Feature 1.030** — Tests: customer A cannot read customer B's ride  

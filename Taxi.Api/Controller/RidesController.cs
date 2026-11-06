@@ -74,7 +74,7 @@ namespace Taxi.Api.Controller
             }
             var response = ToResponse(ride, vehicleType.Name);
 
-            return Created($"api/rides/{ride.Id}", response);
+            return CreatedAtAction(nameof(GetRide), new { id = ride.Id }, response);
         }
         [HttpGet]
         [Authorize]
@@ -96,6 +96,22 @@ namespace Taxi.Api.Controller
             var response = rides.Select(r => ToResponse(r, r.VehicleType.Name)).ToList();
             return Ok(response);
         }
+        [HttpGet("{id:int}")]
+        [Authorize]
+        public async Task<ActionResult<RideResponse>> GetRide(int id)
+        {
+            int userId = User.GetUserId();
+            Role role = User.GetUserRole();
+            var ride = await _context.Rides.AsNoTracking()
+                .VisibleTo(userId, role)
+                .Include(r => r.VehicleType)
+                .FirstOrDefaultAsync(r => r.Id == id);
+            if(ride == null)
+            {
+               return Problem(statusCode: 404, title: "Ride not found");
+            }
+            return Ok(ToResponse(ride, ride.VehicleType.Name));
+        }
         private static RideResponse ToResponse(Ride ride, string vehicleTypeName)
         {
             return new RideResponse
@@ -112,7 +128,6 @@ namespace Taxi.Api.Controller
                 VehicleTypeId = ride.VehicleTypeId,
 
             };
-
         }
     }
 }
