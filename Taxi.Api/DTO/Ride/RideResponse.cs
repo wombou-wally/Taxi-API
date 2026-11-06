@@ -14,5 +14,7 @@ namespace Taxi.Api.DTO.Ride
         public double DropoffLog { get; set; }
         public decimal EstimatedFare { get; set; }
         public DateTime RequestedAt { get; set; }
+        public decimal? FinalFare { get; set; }
+        public DateTime? CompletedAt { get; set; }
     }
 }

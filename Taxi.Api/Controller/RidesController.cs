@@ -20,6 +20,7 @@ namespace Taxi.Api.Controller
         private const double Speed = 25;
         private const double SearchRadiusKm = 10.0;
         private const int MaxCandidates = 200;
+        private const decimal MaxFareMultiplier = 2m;
         public RidesController(TaxiDbContext context, IFareService fareService, IDistanceService distanceService)
         {
             _context = context;
@@ -248,6 +249,44 @@ namespace Taxi.Api.Controller
             return Ok(ToResponse(ride, ride.VehicleType.Name));
 
         }
+        [HttpPost("{id:int}/complete")]
+        [Authorize(Roles = nameof(Role.Driver))]
+        public async Task<ActionResult<RideResponse>> Complete(int id)
+        {
+            int driverId = User.GetUserId();
+            var exist = await _context.Rides.AsNoTracking()
+                .Include(r => r.VehicleType)
+                .FirstOrDefaultAsync(r => r.Id == id && r.DriverProfileUserId == driverId);
+            if(exist == null)
+            {
+                return Problem(statusCode: 404, title: "ride not found");
+            }
+            if(exist.Status != RideStatus.InProgress)
+            {
+                return Problem(statusCode: 409, title: "ride can't be completed");
+            }
+
+            var started = exist.StartedAt ?? DateTime.UtcNow;
+            var minutes = (DateTime.UtcNow - started).TotalMinutes;
+            minutes = Math.Max(1, Math.Ceiling(minutes));
+            var distance = _distanceService.DistanceKm(exist.PickupLatitude, exist.PickupLongitude,exist.DropoffLatitude, exist.DropoffLongitude);
+            var fare = _fareService.CalculateFare(exist.VehicleType, distance,minutes);
+            fare = Math.Min(fare, exist.EstimatedFare * MaxFareMultiplier);
+
+            var changed = await _context.Rides.Where(r => r.Id == id && r.DriverProfileUserId == driverId && r.Status == RideStatus.InProgress)
+                .ExecuteUpdateAsync(s => s
+                .SetProperty(s => s.Status, RideStatus.Completed)
+                .SetProperty(s => s.CompletedAt, DateTime.UtcNow)
+                .SetProperty(s => s.FinalFare, fare)
+                );
+            if(changed == 0)
+            {
+                return Problem(statusCode: 409, title: "ride can't be completed");
+            }
+            var ride = await _context.Rides.Include(r => r.VehicleType)
+                .FirstAsync(r => r.Id == id);
+            return Ok(ToResponse(ride, ride.VehicleType.Name));
+        }
 
         private static bool IsUniqueViolation(Exception ex)
         {
@@ -292,7 +331,9 @@ namespace Taxi.Api.Controller
                 DropoffLat = ride.DropoffLatitude,
                 DropoffLog = ride.DropoffLongitude,
                 EstimatedFare = ride.EstimatedFare,
+                FinalFare = ride.FinalFare,
                 RequestedAt = ride.RequestedAt,
+                CompletedAt = ride.CompletedAt,
                 Status = ride.Status.ToString(),
                 VehicleTypeId = ride.VehicleTypeId,
 
