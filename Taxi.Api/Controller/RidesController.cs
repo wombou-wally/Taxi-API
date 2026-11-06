@@ -72,21 +72,47 @@ namespace Taxi.Api.Controller
 
                 return Problem(statusCode: 409, title: "You already have an active ride");
             }
-            var response = new RideResponse
-            {
-                Id = ride.Id,
-                DropoffLat = ride.DropoffLatitude,
-                DropoffLog = ride.DropoffLongitude,
-                RequestedAt = ride.RequestedAt,
-                EstimatedFare = ride.EstimatedFare,
-                Status = ride.Status.ToString(),
-                VehicleTypeId = ride.VehicleTypeId,
-                Name = vehicleType.Name,
-                PickupLat = ride.PickupLatitude,
-                PickupLog = ride.PickupLongitude
-            };
+            var response = ToResponse(ride, vehicleType.Name);
 
             return Created($"api/rides/{ride.Id}", response);
+        }
+        [HttpGet]
+        [Authorize]
+        public async Task<ActionResult<IEnumerable<RideResponse>>> GetMyRides(int limit = 20)
+        {
+            int id = User.GetUserId();
+            Role role = User.GetUserRole();
+            if (limit < 1 || limit > 50)
+            {
+                return Problem(statusCode: 400, title: "Limit must be between 1 and 50");
+            }
+            var rides = await _context.Rides.AsNoTracking()
+                .VisibleTo(id, role)
+                .Include(r => r.VehicleType)
+                .OrderByDescending(r => r.RequestedAt)
+                .ThenByDescending(r => r.Id)
+                .Take(limit)
+                .ToListAsync();
+            var response = rides.Select(r => ToResponse(r, r.VehicleType.Name)).ToList();
+            return Ok(response);
+        }
+        private static RideResponse ToResponse(Ride ride, string vehicleTypeName)
+        {
+            return new RideResponse
+            {
+                Id = ride.Id,
+                Name = vehicleTypeName,
+                PickupLat = ride.PickupLatitude,
+                PickupLog = ride.PickupLongitude,
+                DropoffLat = ride.DropoffLatitude,
+                DropoffLog = ride.DropoffLongitude,
+                EstimatedFare = ride.EstimatedFare,
+                RequestedAt = ride.RequestedAt,
+                Status = ride.Status.ToString(),
+                VehicleTypeId = ride.VehicleTypeId,
+
+            };
+
         }
     }
 }
