@@ -129,10 +129,10 @@ Roles: **Customer**, **Driver**, **Admin**, **All** (any logged-in user), **Syst
 - [DONE] **Feature 1.025** — Ride entity, RideStatus enum and migration  
        Role: Dev · Size: M (2) · Depends on: 1.004, 1.015, 1.017 · Stories: US-10  
        _Done when:_ Ride table exists with all timestamps, estimated and final fare.
-- [ ] **Feature 1.026** — Central 'visible rides' query enforcing ownership  
+- [DONE] **Feature 1.026** — Central 'visible rides' query enforcing ownership  
        Role: Dev · Size: M (2) · Depends on: 1.025 · Stories: US-21, US-11  
        _Done when:_ One method filters by role: customer own, driver Requested + assigned, admin all.
-- [ ] **Feature 1.027** — Customer requests a ride  
+- [DONE] **Feature 1.027** — Customer requests a ride  
        Role: Customer · Size: M (2) · Depends on: 1.025, 1.024, 1.007 · Stories: US-10  
        _Done when:_ Ride saved as Requested with estimated fare; second open ride rejected with 409.
 - [ ] **Feature 1.028** — Customer lists and views own rides  
