@@ -147,7 +147,7 @@ Roles: **Customer**, **Driver**, **Admin**, **All** (any logged-in user), **Syst
 - [DONE] **Feature 1.031** — Driver lists available rides  
        Role: Driver · Size: S (1) · Depends on: 1.026, 1.019 · Stories: US-12  
        _Done when:_ Only Requested rides are shown, only to online approved drivers.
-- [ ] **Feature 1.032** — Driver accepts a ride (first accept wins)  
+- [DONE] **Feature 1.032** — Driver accepts a ride (first accept wins)  
        Role: Driver · Size: L (3) · Depends on: 1.031, 1.020 · Stories: US-13  
        _Done when:_ Single conditional update or concurrency token; loser gets 409; one active ride per driver.
 - [ ] **Feature 1.033** — Driver starts a ride  

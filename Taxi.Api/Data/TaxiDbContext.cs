@@ -115,6 +115,9 @@ namespace Taxi.Api.Data
                 entity.HasIndex(r => r.CustomerId)
                       .IsUnique()
                       .HasFilter("\"Status\" IN ('Requested', 'Accepted', 'InProgress')");
+                entity.HasIndex(r => r.DriverProfileUserId)
+                      .IsUnique()
+                      .HasFilter("\"Status\" IN ('Accepted', 'InProgress')");
             });
         }
     }

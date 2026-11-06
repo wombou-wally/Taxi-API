@@ -123,32 +123,14 @@ namespace Taxi.Api.Controller
             {
                 return Problem(statusCode: 400, title: "Limit must be between 1 and 50");
             }
-            var driver = await _context.DriverProfiles.AsNoTracking()
-                .Include(d => d.ActiveVehicle)
-                .FirstOrDefaultAsync(d => d.UserId == driverId);
-            if (driver == null)
+            var (driver, error) = await LoadReadyDriverAsync(driverId);
+            if (error != null)
             {
-                return Problem(statusCode: 404, title: "Driver profile not found");
+                return error;
             }
-            if (driver.Status != ApprovalStatus.Approved)
-            {
-                return Problem(statusCode: 403, title: "Your driver account is not approved");
-            }
-            if (!driver.IsOnline)
-            {
-                return Problem(statusCode: 409, title: "Go online to see rides");
-            }
-            if (driver.CurrentLatitude == null || driver.CurrentLongitude == null)
-            {
-                return Problem(statusCode: 409, title: "Share your location to see rides");
-            }
-            if (driver.ActiveVehicle == null)
-            {
-                return Problem(statusCode: 409, title: "Select an active vehicle to see rides");
-            }
-            double driverLat = driver.CurrentLatitude.Value;
-            double driverLon = driver.CurrentLongitude.Value;
-            int vehicleTypeId = driver.ActiveVehicle.VehicleTypeId;
+            double driverLat = driver!.CurrentLatitude!.Value;
+            double driverLon = driver.CurrentLongitude!.Value;
+            int vehicleTypeId = driver.ActiveVehicle!.VehicleTypeId;
 
             var candidates = await _context.Rides.AsNoTracking()
                 .Where(r => r.Status == RideStatus.Requested
@@ -181,8 +163,96 @@ namespace Taxi.Api.Controller
                     RequestedAt = x.Ride.RequestedAt
                 })
                 .ToList();
-
             return Ok(response);
+        }
+        [HttpPost("{id:int}/accept")]
+        [Authorize(Roles = nameof(Role.Driver))]
+        public async Task<ActionResult<RideResponse>> AcceptRide(int id)
+        {
+            int driverId = User.GetUserId();
+
+            var (driver, error) = await LoadReadyDriverAsync(driverId);
+            if (error != null)
+            {
+                return error;
+            }
+            int vehicleTypeId = driver!.ActiveVehicle!.VehicleTypeId;
+            int vehicleId = driver.ActiveVehicle.Id;
+
+            var busy = await _context.Rides.AnyAsync(r =>
+                r.DriverProfileUserId == driverId
+                && (r.Status == RideStatus.Accepted || r.Status == RideStatus.InProgress));
+            if (busy)
+            {
+                return Problem(statusCode: 409, title: "You already have an active ride");
+            }
+
+            int changed;
+            try
+            {
+                changed = await _context.Rides
+                    .Where(r => r.Id == id
+                                && r.Status == RideStatus.Requested
+                                && r.DriverProfileUserId == null
+                                && r.VehicleTypeId == vehicleTypeId)
+                    .ExecuteUpdateAsync(s => s
+                        .SetProperty(r => r.Status, RideStatus.Accepted)
+                        .SetProperty(r => r.DriverProfileUserId, driverId)
+                        .SetProperty(r => r.VehicleId, vehicleId)
+                        .SetProperty(r => r.AcceptedAt, DateTime.UtcNow));
+            }
+            catch (Exception ex) when (IsUniqueViolation(ex))
+            {
+                return Problem(statusCode: 409, title: "You already have an active ride");
+            }
+
+            if (changed == 0)
+            {
+                var exists = await _context.Rides.AsNoTracking().AnyAsync(r => r.Id == id);
+                if (!exists)
+                {
+                    return Problem(statusCode: 404, title: "Ride not found");
+                }
+                return Problem(statusCode: 409, title: "Ride is no longer available");
+            }
+
+            var ride = await _context.Rides.AsNoTracking()
+                .Include(r => r.VehicleType)
+                .FirstAsync(r => r.Id == id);
+            return Ok(ToResponse(ride, ride.VehicleType.Name));
+        }
+
+        private static bool IsUniqueViolation(Exception ex)
+        {
+            return ex is PostgresException { SqlState: PostgresErrorCodes.UniqueViolation }
+                || ex.InnerException is PostgresException { SqlState: PostgresErrorCodes.UniqueViolation };
+        }
+        private async Task<(DriverProfile? Driver, ActionResult? Error)> LoadReadyDriverAsync(int driverId)
+        {
+            var driver = await _context.DriverProfiles.AsNoTracking()
+                .Include(d => d.ActiveVehicle)
+                .FirstOrDefaultAsync(d => d.UserId == driverId);
+            if (driver == null)
+            {
+                return (null,Problem(statusCode: 404, title: "Driver profile not found"));
+            }
+            if (driver.Status != ApprovalStatus.Approved)
+            {
+                return (null,Problem(statusCode: 403, title: "Your driver account is not approved"));
+            }
+            if (!driver.IsOnline)
+            {
+                return (null,Problem(statusCode: 409, title: "Go online to see rides"));
+            }
+            if (driver.CurrentLatitude == null || driver.CurrentLongitude == null)
+            {
+                return (null,Problem(statusCode: 409, title: "Share your location to see rides"));
+            }
+            if (driver.ActiveVehicle == null)
+            {
+                return (null,Problem(statusCode: 409, title: "Select an active vehicle to see rides"));
+            }
+            return (driver, null);
         }
         private static RideResponse ToResponse(Ride ride, string vehicleTypeName)
         {

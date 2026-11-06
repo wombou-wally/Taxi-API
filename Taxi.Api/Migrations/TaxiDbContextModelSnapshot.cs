@@ -130,7 +130,9 @@ namespace Taxi.Api.Migrations
                         .IsUnique()
                         .HasFilter("\"Status\" IN ('Requested', 'Accepted', 'InProgress')");
 
-                    b.HasIndex("DriverProfileUserId");
+                    b.HasIndex("DriverProfileUserId")
+                        .IsUnique()
+                        .HasFilter("\"Status\" IN ('Accepted', 'InProgress')");
 
                     b.HasIndex("Status");
 
