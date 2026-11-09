@@ -3,7 +3,6 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Npgsql;
-using System.Collections;
 using Taxi.Api.Data;
 using Taxi.Api.DTO.Auth;
 using Taxi.Api.DTO.Driver;
@@ -18,6 +17,7 @@ namespace Taxi.Api.Controller
     {
         private readonly TaxiDbContext _context;
         private readonly IPasswordHasher<User> _hasher;
+
         public DriversController(TaxiDbContext context, IPasswordHasher<User> hasher)
         {
             _context = context;
@@ -29,7 +29,7 @@ namespace Taxi.Api.Controller
         {
             var email = request.Email.Trim().ToLowerInvariant();
             bool emailExists = await _context.Users.AnyAsync(e => e.Email == email);
-            
+
             if (emailExists)
             {
                 return Problem(statusCode: 409, title: "Email Already Associated to an Account");
@@ -41,7 +41,6 @@ namespace Taxi.Api.Controller
             var user = new User
             {
                 Email = email,
-                //PasswordHash = "",
                 FullName = request.FullName.Trim(),
                 Role = Role.Driver,
                 Phone = request.Phone.Trim(),
@@ -55,7 +54,6 @@ namespace Taxi.Api.Controller
             }
             catch (DbUpdateException ex) when (ex.InnerException is PostgresException { SqlState: PostgresErrorCodes.UniqueViolation })
             {
-
                 return Problem(statusCode: 409, title: "Email Already Associated to an Account");
             }
 
@@ -68,25 +66,27 @@ namespace Taxi.Api.Controller
             return StatusCode(StatusCodes.Status201Created, res);
         }
 
-        [Authorize(Roles =nameof(Role.Admin))]
+        [Authorize(Roles = nameof(Role.Admin))]
         [HttpGet("pending")]
         public async Task<ActionResult<IEnumerable<PendingDriverResponse>>> PendingDrivers()
         {
-            var pendingDrivers = await _context.DriverProfiles.Where(d => d.Status == ApprovalStatus.Pending).OrderBy(d => d.User.CreatedAt).Select(d => 
-            new PendingDriverResponse
-            {
-                UserId = d.UserId,
-                Email = d.User.Email,
-                FullName = d.User.FullName,
-                LicenceNumber = d.LicenceNumber,
-                Phone = d.User.Phone,
-                RegisteredAt = d.User.CreatedAt
-            }
-            ).ToListAsync();
-               return Ok(pendingDrivers);
+            var pendingDrivers = await _context.DriverProfiles
+                .Where(d => d.Status == ApprovalStatus.Pending)
+                .OrderBy(d => d.User.CreatedAt)
+                .Select(d => new PendingDriverResponse
+                {
+                    UserId = d.UserId,
+                    Email = d.User.Email,
+                    FullName = d.User.FullName,
+                    LicenceNumber = d.LicenceNumber,
+                    Phone = d.User.Phone,
+                    RegisteredAt = d.User.CreatedAt
+                })
+                .ToListAsync();
+            return Ok(pendingDrivers);
         }
 
-        [Authorize (Roles = nameof(Role.Admin))]
+        [Authorize(Roles = nameof(Role.Admin))]
         [HttpPost("approve/{userId:int}")]
         public async Task<ActionResult<DriverStatusResponse>> Approve(int userId)
         {
@@ -95,18 +95,17 @@ namespace Taxi.Api.Controller
             {
                 return Problem(statusCode: 404, title: "No Driver with enterd Id");
             }
-            else if(driver.Status != ApprovalStatus.Pending)
+            else if (driver.Status != ApprovalStatus.Pending)
             {
                 return Problem(statusCode: 409, title: "Driver status is not pending");
             }
             driver.Status = ApprovalStatus.Approved;
             await _context.SaveChangesAsync();
-            var response = new DriverStatusResponse
+            return Ok(new DriverStatusResponse
             {
                 UserId = userId,
                 Status = driver.Status,
-            };
-            return Ok(response);
+            });
         }
 
         [Authorize(Roles = nameof(Role.Admin))]
@@ -124,12 +123,11 @@ namespace Taxi.Api.Controller
             }
             driver.Status = ApprovalStatus.Rejected;
             await _context.SaveChangesAsync();
-            var response = new DriverStatusResponse
+            return Ok(new DriverStatusResponse
             {
                 UserId = userId,
                 Status = driver.Status,
-            };
-            return Ok(response);
+            });
         }
 
         [Authorize(Roles = nameof(Role.Driver))]
@@ -140,8 +138,7 @@ namespace Taxi.Api.Controller
             var driver = await _context.DriverProfiles.FirstOrDefaultAsync(r => r.UserId == id);
             var vehicle = await _context.Vehicles.FirstOrDefaultAsync(v => v.Id == request.VehicleId && v.DriverProfileUserId == id);
 
-            
-            if(driver == null)
+            if (driver == null)
             {
                 return Problem(statusCode: 404, title: "Driver not found");
             }
@@ -160,38 +157,46 @@ namespace Taxi.Api.Controller
             driver.ActiveVehicleId = request.VehicleId;
             driver.IsOnline = true;
             await _context.SaveChangesAsync();
-            var response = new DriverAvailabilityResponse
+            return Ok(new DriverAvailabilityResponse
             {
                 IsOnline = driver.IsOnline,
                 VehicleId = driver.ActiveVehicleId
-            };
-            return Ok(response);
+            });
         }
+
         [Authorize(Roles = nameof(Role.Driver))]
         [HttpPost("offline")]
         public async Task<ActionResult<DriverAvailabilityResponse>> Offline()
         {
             int id = User.GetUserId();
             var driver = await _context.DriverProfiles.FirstOrDefaultAsync(d => d.UserId == id);
-
-            if(driver != null)
+            if (driver == null)
             {
-                driver.IsOnline = false;
-                driver.ActiveVehicleId = null;
-                driver.CurrentLatitude = null;
-                driver.CurrentLongitude = null;
-                driver.LocationUpdatedAt = null;
-                await _context.SaveChangesAsync();
-                var response = new DriverAvailabilityResponse
-                {
-                    IsOnline = driver.IsOnline,
-                    VehicleId = driver.ActiveVehicleId
-                };
-                return Ok(response);
-                
+                return Problem(statusCode: 404, title: "Driver not found");
             }
-            return Problem(statusCode: 404, title: "Driver not found");
+
+            var onRide = await _context.Rides.AnyAsync(r =>
+                r.DriverProfileUserId == id
+                && (r.Status == RideStatus.Accepted || r.Status == RideStatus.InProgress));
+            if (onRide)
+            {
+                return Problem(statusCode: 409, title: "Finish or drop your current ride before going offline");
+            }
+
+            driver.IsOnline = false;
+            driver.ActiveVehicleId = null;
+            driver.CurrentLatitude = null;
+            driver.CurrentLongitude = null;
+            driver.LocationUpdatedAt = null;
+            await _context.SaveChangesAsync();
+
+            return Ok(new DriverAvailabilityResponse
+            {
+                IsOnline = driver.IsOnline,
+                VehicleId = driver.ActiveVehicleId
+            });
         }
+
         [Authorize(Roles = nameof(Role.Driver))]
         [HttpPut("location")]
         public async Task<ActionResult> UpdateLocation(UpdateLocationRequest request)
@@ -199,11 +204,11 @@ namespace Taxi.Api.Controller
             int id = User.GetUserId();
             var existing = await _context.DriverProfiles.FirstOrDefaultAsync(d => d.UserId == id);
 
-            if(existing == null)
+            if (existing == null)
             {
                 return Problem(statusCode: 404, title: "Driver not found");
             }
-            if(existing.IsOnline == false)
+            if (existing.IsOnline == false)
             {
                 return Problem(statusCode: 409, title: "Driver not Online");
             }

@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Taxi.Api.Data;
 using Taxi.Api.DTO.Fare;
+using Taxi.Api.Infrastructure;
 using Taxi.Api.Models;
 using Taxi.Api.Services;
 
@@ -16,8 +17,7 @@ namespace Taxi.Api.Controller
         private readonly TaxiDbContext _context;
         private readonly IFareService _fareService;
         private readonly IDistanceService _distanceService;
-        private const double Speed = 25.0;
-        private const double MaxDistance = 100.0;
+
         public FareController(TaxiDbContext context, IFareService fareService, IDistanceService distanceService)
         {
             _context = context;
@@ -28,16 +28,23 @@ namespace Taxi.Api.Controller
         [HttpPost("estimate")]
         public async Task<ActionResult<EstimateResponse>> EstimateFare(EstimateRequest request)
         {
-            
-            var distance = _distanceService.DistanceKm(request.PickupLatitude,request.PickupLongitude,request.DropoffLatitude,request.DropoffLongitude);
-            if(distance > MaxDistance)
+            var distance = _distanceService.DistanceKm(
+                request.PickupLatitude, request.PickupLongitude,
+                request.DropoffLatitude, request.DropoffLongitude);
+
+            if (distance > RideRules.MaxDistanceKm)
             {
                 return Problem(statusCode: 400, title: "Trip is too long for the service area");
             }
-            double minutes = (distance / Speed) * 60;
-            minutes = Math.Max(1, Math.Ceiling(minutes));
 
-            var vehicleTypes = await _context.VehicleTypes.Where(v => v.IsActive == true).OrderBy(v => v.BaseFare).AsNoTracking().ToListAsync();
+            double minutes = RideRules.EstimatedMinutes(distance);
+
+            var vehicleTypes = await _context.VehicleTypes
+                .AsNoTracking()
+                .Where(v => v.IsActive)
+                .OrderBy(v => v.BaseFare)
+                .ToListAsync();
+
             var options = vehicleTypes.Select(v => new EstimateOption
             {
                 VehicleTypeId = v.Id,
@@ -45,6 +52,7 @@ namespace Taxi.Api.Controller
                 Name = v.Name,
                 EstimatedFare = _fareService.CalculateFare(v, distance, minutes)
             }).ToList();
+
             var response = new EstimateResponse
             {
                 EstimatedMinutes = Convert.ToInt32(minutes),
