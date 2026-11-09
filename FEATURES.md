@@ -171,7 +171,7 @@ Roles: **Customer**, **Driver**, **Admin**, **All** (any logged-in user), **Syst
 
 ### E. Payments and notifications
 
-- [ ] **Feature 1.039** — Payment entity and migration (method, status, amount)  
+- [DONE] **Feature 1.039** — Payment entity and migration (method, status, amount)  
        Role: Dev · Size: S (1) · Depends on: 1.025 · Stories: US-19  
        _Done when:_ One payment per ride; no card data fields exist.
 - [ ] **Feature 1.040** — Record in-car payment (cash or debit machine) on completion  

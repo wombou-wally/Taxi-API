@@ -10,6 +10,7 @@ namespace Taxi.Api.Data
         public DbSet<VehicleType> VehicleTypes { get; set; }
         public DbSet<Vehicle> Vehicles { get; set; }
         public DbSet<Ride> Rides { get; set; }
+        public DbSet<Payment> Payments { get; set; }
 
         public TaxiDbContext(DbContextOptions<TaxiDbContext> options) : base(options)
         {
@@ -29,7 +30,6 @@ namespace Taxi.Api.Data
             modelBuilder.Entity<DriverProfile>(entity =>
             {
                 entity.HasKey(d => d.UserId);
-
                 entity.HasOne(d => d.User)
                       .WithOne(u => u.DriverProfile)
                       .HasForeignKey<DriverProfile>(d => d.UserId)
@@ -118,6 +118,27 @@ namespace Taxi.Api.Data
                 entity.HasIndex(r => r.DriverProfileUserId)
                       .IsUnique()
                       .HasFilter("\"Status\" IN ('Accepted', 'InProgress')");
+            });
+
+            modelBuilder.Entity<Payment>(entity =>
+            {
+                entity.Property(p => p.Amount).HasPrecision(10, 2);
+                entity.Property(p => p.Method).HasConversion<string>();
+                entity.Property(p => p.Status).HasConversion<string>();
+
+                // One payment per ride, guaranteed by the database.
+                entity.HasIndex(p => p.RideId).IsUnique();
+
+                // Payments are history: a ride or driver with a payment can't be deleted.
+                entity.HasOne(p => p.Ride)
+                      .WithMany()
+                      .HasForeignKey(p => p.RideId)
+                      .OnDelete(DeleteBehavior.Restrict);
+
+                entity.HasOne(p => p.RecordedByDriver)
+                      .WithMany()
+                      .HasForeignKey(p => p.RecordedByDriverId)
+                      .OnDelete(DeleteBehavior.Restrict);
             });
         }
     }

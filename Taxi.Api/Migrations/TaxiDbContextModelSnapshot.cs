@@ -58,6 +58,45 @@ namespace Taxi.Api.Migrations
                     b.ToTable("DriverProfiles");
                 });
 
+            modelBuilder.Entity("Taxi.Api.Models.Payment", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<decimal>("Amount")
+                        .HasPrecision(10, 2)
+                        .HasColumnType("numeric(10,2)");
+
+                    b.Property<string>("Method")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime?>("PaidAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("RecordedByDriverId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("RideId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("RecordedByDriverId");
+
+                    b.HasIndex("RideId")
+                        .IsUnique();
+
+                    b.ToTable("Payments");
+                });
+
             modelBuilder.Entity("Taxi.Api.Models.Ride", b =>
                 {
                     b.Property<int>("Id")
@@ -323,6 +362,25 @@ namespace Taxi.Api.Migrations
                     b.Navigation("ActiveVehicle");
 
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("Taxi.Api.Models.Payment", b =>
+                {
+                    b.HasOne("Taxi.Api.Models.DriverProfile", "RecordedByDriver")
+                        .WithMany()
+                        .HasForeignKey("RecordedByDriverId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Taxi.Api.Models.Ride", "Ride")
+                        .WithMany()
+                        .HasForeignKey("RideId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("RecordedByDriver");
+
+                    b.Navigation("Ride");
                 });
 
             modelBuilder.Entity("Taxi.Api.Models.Ride", b =>
