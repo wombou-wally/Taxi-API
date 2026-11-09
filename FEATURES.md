@@ -162,7 +162,7 @@ Roles: **Customer**, **Driver**, **Admin**, **All** (any logged-in user), **Syst
 - [DONE] **Feature 1.036** — Driver cancels an accepted ride (returns it to Requested)  
        Role: Driver · Size: M (2) · Depends on: 1.032 · Stories: US-16  
        _Done when:_ Ride becomes available again and assignment is cleared.
-- [ ] **Feature 1.037** — Admin lists all rides with status filter  
+- [DONE] **Feature 1.037** — Admin lists all rides with status filter  
        Role: Admin · Size: S (1) · Depends on: 1.026, 1.008 · Stories: US-17  
        _Done when:_ Admin sees every ride; other roles get 403.
 - [ ] **Feature 1.038** — Integration tests: full ride lifecycle and double accept  
