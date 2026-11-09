@@ -252,7 +252,7 @@ namespace Taxi.Api.Controller
         }
         [HttpPost("{id:int}/complete")]
         [Authorize(Roles = nameof(Role.Driver))]
-        public async Task<ActionResult<RideResponse>> Complete(int id, [FromBody(EmptyBodyBehavior = EmptyBodyBehavior.Allow)] CancelRideRequest? request)
+        public async Task<ActionResult<RideResponse>> Complete(int id)
         {
             int driverId = User.GetUserId();
             var exist = await _context.Rides.AsNoTracking()
@@ -290,7 +290,6 @@ namespace Taxi.Api.Controller
         }
         [HttpPost("{id:int}/cancel")]
         [Authorize(Roles = nameof(Role.Customer))]
-
         public async Task<ActionResult<RideResponse>> CancelRide(int id, [FromBody(EmptyBodyBehavior = EmptyBodyBehavior.Allow)] CancelRideRequest? request)
         {
             int customerId = User.GetUserId();
@@ -316,7 +315,7 @@ namespace Taxi.Api.Controller
                 var exists = await _context.Rides.AsNoTracking()
                     .AnyAsync(r => r.Id == id && r.CustomerId == customerId);
                 if (!exists)
-                {
+                { 
                     return Problem(statusCode: 404, title: "Ride not found");
                 }
                 return Problem(statusCode: 409, title: "Ride cannot be cancelled");
@@ -327,7 +326,32 @@ namespace Taxi.Api.Controller
                 .FirstAsync(r => r.Id == id);
             return Ok(ToResponse(ride, ride.VehicleType.Name));
         }
-
+        [HttpPost("{id:int}/driver-cancel")]
+        [Authorize(Roles = nameof(Role.Driver))]
+        public async Task<ActionResult> DriverCancleRide(int id)
+        {
+            int driverId = User.GetUserId();
+            Role role = User.GetUserRole();
+            
+            var changed = await _context.Rides.Where(r => id == r.Id && r.DriverProfileUserId == driverId && r.Status == RideStatus.Accepted)
+                                .ExecuteUpdateAsync(s => s
+                                .SetProperty(r => r.Status, RideStatus.Requested)
+                                .SetProperty(r => r.DriverProfileUserId,(int?)null)
+                                .SetProperty(r => r.VehicleId,(int?)null)
+                                .SetProperty(r => r.AcceptedAt,(DateTime?)null)
+                                );
+            if (changed == 0)
+            {
+                var exists = await _context.Rides.AsNoTracking()
+                    .AnyAsync(r => r.Id == id && r.DriverProfileUserId == driverId);
+                if (!exists)
+                {
+                    return Problem(statusCode: 404, title: "Ride not found");
+                }
+                return Problem(statusCode: 409, title: "Ride cannot be cancelled");
+            }
+            return NoContent();
+        }
         private static bool IsUniqueViolation(Exception ex)
         {
             return ex is PostgresException { SqlState: PostgresErrorCodes.UniqueViolation }

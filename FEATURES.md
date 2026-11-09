@@ -159,7 +159,7 @@ Roles: **Customer**, **Driver**, **Admin**, **All** (any logged-in user), **Syst
 - [DONE] **Feature 1.035** — Customer cancels a ride  
        Role: Customer · Size: M (2) · Depends on: 1.027, 1.032 · Stories: US-15  
        _Done when:_ Allowed from Requested or Accepted; blocked once InProgress.
-- [ ] **Feature 1.036** — Driver cancels an accepted ride (returns it to Requested)  
+- [DONE] **Feature 1.036** — Driver cancels an accepted ride (returns it to Requested)  
        Role: Driver · Size: M (2) · Depends on: 1.032 · Stories: US-16  
        _Done when:_ Ride becomes available again and assignment is cleared.
 - [ ] **Feature 1.037** — Admin lists all rides with status filter  
