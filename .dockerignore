@@ -1,0 +1,10 @@
+**/bin/
+**/obj/
+.git/
+.vs/
+.vscode/
+.github/
+docs/
+Taxi.Api.Tests/
+docker.env
+*.md
