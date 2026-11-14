@@ -1,0 +1,45 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: taxi_test
+          POSTGRES_PASSWORD: ci-only-password
+          POSTGRES_DB: taxi_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U taxi_test -d taxi_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      TAXI_TEST_CONNECTION: Host=localhost;Port=5432;Database=taxi_test;Username=taxi_test;Password=ci-only-password
+
+    steps:
+      - name: Check out the code
+        uses: actions/checkout@v4
+
+      - name: Install .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Restore packages
+        run: dotnet restore
+
+      - name: Build
+        run: dotnet build --no-restore -c Release
+
+      - name: Run tests
+        run: dotnet test --no-build -c Release
