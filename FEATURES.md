@@ -192,7 +192,7 @@ Roles: **Customer**, **Driver**, **Admin**, **All** (any logged-in user), **Syst
 - [DONE] **Feature 1.044** — Multi-stage Dockerfile for the API  
        Role: Dev · Size: M (2) · Depends on: 1.038 · Stories: US-22  
        _Done when:_ Image builds and runs on a clean machine.
-- [ ] **Feature 1.045** — docker-compose with API and PostgreSQL  
+- [DONE] **Feature 1.045** — docker-compose with API and PostgreSQL  
        Role: Dev · Size: M (2) · Depends on: 1.044 · Stories: US-22  
        _Done when:_ docker compose up starts everything and applies migrations.
 - [ ] **Feature 1.046** — GitHub Actions: build and test on every push  

@@ -78,8 +78,7 @@ if(p == true)
 await DbSeeder.SeedAdminAsync(app.Services);
 app.Run();
 
-
 public partial class Program
 {
-
+   
 }
