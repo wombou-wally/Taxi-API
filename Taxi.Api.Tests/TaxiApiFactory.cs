@@ -24,7 +24,7 @@ namespace Taxi.Api.Tests
             builder.UseSetting("Jwt:Issuer", "heyllo");
             builder.UseSetting("Jwt:Audience", "Yessir");
             builder.UseSetting("Jwt:ExpiryMinutes", "60");
-            builder.UseSetting("Database: MigrateOnStartup","true");
+            builder.UseSetting("Database:MigrateOnStartup","true");
         }
     }
 }
