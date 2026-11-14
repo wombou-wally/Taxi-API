@@ -9,6 +9,7 @@ using Taxi.Api.Infrastructure;
 using Taxi.Api.Models;
 using Taxi.Api.Services;
 using System.Text.Json.Serialization;
+using Microsoft.EntityFrameworkCore.Storage;
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
@@ -67,6 +68,13 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+using var db = app.Services.CreateScope();
+var  taxiDb = db.ServiceProvider.GetRequiredService<TaxiDbContext>();
+var p = app.Configuration.GetValue<bool>("Database:MigrateOnStartup");
+if(p == true)
+{
+    await taxiDb.Database.MigrateAsync();
+}
 await DbSeeder.SeedAdminAsync(app.Services);
 app.Run();
 

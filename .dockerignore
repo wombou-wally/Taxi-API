@@ -4,6 +4,7 @@
 .vs/
 .vscode/
 .github/
+.env
 docs/
 Taxi.Api.Tests/
 docker.env

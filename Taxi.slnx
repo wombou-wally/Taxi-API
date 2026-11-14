@@ -1,4 +1,13 @@
 <Solution>
+  <Folder Name="/Solution Items/">
+    <File Path=".dockerignore" />
+    <File Path=".env" />
+    <File Path=".env.example" />
+    <File Path=".gitignore" />
+    <File Path="docker-compose.yml" />
+    <File Path="docker.env" />
+    <File Path="Dockerfile" />
+  </Folder>
   <Project Path="Taxi.Api.Tests/Taxi.Api.Tests.csproj" />
   <Project Path="Taxi.Api/Taxi.Api.csproj" />
 </Solution>
