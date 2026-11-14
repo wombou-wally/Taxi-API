@@ -41,5 +41,11 @@ jobs:
       - name: Build
         run: dotnet build --no-restore -c Release
 
+      - name: Install ef
+        run: dotnet tool install --global dotnet-ef
+
+      - name: Run Migration
+        run: dotnet ef database update --project Taxi.Api --connection "$TAXI_TEST_CONNECTION"
+
       - name: Run tests
         run: dotnet test --no-build -c Release
