@@ -195,7 +195,7 @@ Roles: **Customer**, **Driver**, **Admin**, **All** (any logged-in user), **Syst
 - [DONE] **Feature 1.045** — docker-compose with API and PostgreSQL  
        Role: Dev · Size: M (2) · Depends on: 1.044 · Stories: US-22  
        _Done when:_ docker compose up starts everything and applies migrations.
-- [ ] **Feature 1.046** — GitHub Actions: build and test on every push  
+- [DONE] **Feature 1.046** — GitHub Actions: build and test on every push  
        Role: Dev · Size: M (2) · Depends on: 1.038, 1.030 · Stories: US-22  
        _Done when:_ Green badge on the README.
 - [ ] **Feature 1.047** — Final README: overview, architecture, setup, API tour  

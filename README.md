@@ -1,3 +1,5 @@
+[![CI](https://github.com/wombou-wally/Taxi-API/actions/workflows/ci.yml/badge.svg)](https://github.com/wombou-wally/Taxi-API/actions/workflows/ci.yml)
+
 # Taxi API
 
 A ride-hailing backend built with **ASP.NET Core** and **PostgreSQL**. One API serves three roles: **Customer**, **Driver** and **Admin**.
@@ -32,4 +34,4 @@ Setup instructions will be added in feature 1.047 (final README).
 
 ## Author
 
-Wally Fred Wombou
+Wally Fred Foudjeu Wombou
