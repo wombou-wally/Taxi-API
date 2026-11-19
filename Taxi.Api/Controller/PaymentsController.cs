@@ -21,6 +21,13 @@ namespace Taxi.Api.Controller
 
         [HttpPost]
         [Authorize(Roles = nameof(Role.Driver))]
+        [Authorize(Roles = nameof(Role.Driver))]
+        [ProducesResponseType(typeof(PaymentResponse), StatusCodes.Status201Created)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status409Conflict)]
         public async Task<ActionResult<PaymentResponse>> RecordPayment(int id, RecordPaymentRequest request)
         {
             int driverId = User.GetUserId();

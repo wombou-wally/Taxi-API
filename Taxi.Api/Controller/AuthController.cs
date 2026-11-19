@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Identity;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Npgsql;
@@ -26,6 +27,7 @@ namespace Taxi.Api.Controller
             _jwtTokenService = token;
         }
 
+        [AllowAnonymous]
         [HttpPost("register")]
         public async Task<ActionResult<RegisterResponse>> Register(RegisterRequest request)
         {
@@ -68,7 +70,7 @@ namespace Taxi.Api.Controller
             };
             return StatusCode(StatusCodes.Status201Created , res);
         }
-
+        [AllowAnonymous]
         [HttpPost("login")]
         public async Task<ActionResult<LoginResponse>> Login(LoginRequest request)
         {

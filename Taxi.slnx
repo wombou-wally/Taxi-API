@@ -8,6 +8,7 @@
     <File Path="docker-compose.yml" />
     <File Path="docker.env" />
     <File Path="Dockerfile" />
+    <File Path="publish-image.yml" />
   </Folder>
   <Project Path="Taxi.Api.Tests/Taxi.Api.Tests.csproj" />
   <Project Path="Taxi.Api/Taxi.Api.csproj" />

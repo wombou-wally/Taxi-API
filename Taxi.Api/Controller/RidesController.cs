@@ -12,6 +12,7 @@ namespace Taxi.Api.Controller
 {
     [ApiController]
     [Route("api/rides")]
+
     public class RidesController : ControllerBase
     {
         private const double SearchRadiusKm = 10.0;
@@ -30,6 +31,7 @@ namespace Taxi.Api.Controller
 
         [HttpPost]
         [Authorize(Roles = nameof(Role.Customer))]
+        
         public async Task<ActionResult<RideResponse>> RequestRide(RideRequest request)
         {
             int customerId = User.GetUserId();

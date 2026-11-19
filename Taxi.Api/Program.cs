@@ -9,16 +9,19 @@ using Taxi.Api.Infrastructure;
 using Taxi.Api.Models;
 using Taxi.Api.Services;
 using System.Text.Json.Serialization;
-using Microsoft.EntityFrameworkCore.Storage;
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 
-
 builder.Services.AddControllers().AddJsonOptions(option => option.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()));
 
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
-builder.Services.AddOpenApi();
+builder.Services.AddOpenApi(option =>
+{
+    option.AddDocumentTransformer<BearerSecurityTransformer>();
+    option.AddOperationTransformer<BearerSecurityTransformer>();
+});
+
 builder.Services.AddDbContext<TaxiDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 builder.Services.AddScoped<IPasswordHasher<User>, PasswordHasher<User>>();
@@ -61,6 +64,7 @@ if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
     app.MapScalarApiReference();
+    
 }
 
 app.UseHttpsRedirection();
