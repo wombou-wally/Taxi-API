@@ -25,7 +25,16 @@ namespace Taxi.Api.Controller
             _distanceService = distanceService;
         }
 
+        /// <summary>
+        /// Estimates the fare for a trip, one option per active vehicle type.
+        /// </summary>
+        /// <remarks>
+        /// Distance is measured in a straight line. Returns 400 when the trip is longer than the service area allows.
+        /// </remarks>
         [HttpPost("estimate")]
+        [ProducesResponseType(typeof(EstimateResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         public async Task<ActionResult<EstimateResponse>> EstimateFare(EstimateRequest request)
         {
             var distance = _distanceService.DistanceKm(

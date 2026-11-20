@@ -21,7 +21,18 @@ namespace Taxi.Api.Controller
             _context = context;
         }
 
+        /// <summary>
+        /// Adds a vehicle to the logged-in driver.
+        /// </summary>
+        /// <remarks>
+        /// The plate is normalised to upper case and must be unique. Insurance must expire in the future.
+        /// </remarks>
         [HttpPost("vehicle")]
+        [ProducesResponseType(typeof(DriversVehicleResponse), StatusCodes.Status201Created)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status409Conflict)]
         public async Task<ActionResult<DriversVehicleResponse>> CreateVehicle(DriversVehicleRequest request)
         {
             var plate = NormalizePlate(request.PlateNumber);
@@ -55,7 +66,13 @@ namespace Taxi.Api.Controller
             return StatusCode(StatusCodes.Status201Created, ToResponse(vehicle));
         }
 
+        /// <summary>
+        /// Lists the vehicles of the logged-in driver.
+        /// </summary>
         [HttpGet("vehicle")]
+        [ProducesResponseType(typeof(IEnumerable<DriversVehicleResponse>), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
         public async Task<ActionResult<IEnumerable<DriversVehicleResponse>>> ListVehicle()
         {
             var driverId = User.GetUserId();
@@ -76,7 +93,16 @@ namespace Taxi.Api.Controller
             return Ok(list);
         }
 
+        /// <summary>
+        /// Updates one of the logged-in driver's vehicles.
+        /// </summary>
         [HttpPut("vehicle/{id:int}")]
+        [ProducesResponseType(typeof(DriversVehicleResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status409Conflict)]
         public async Task<ActionResult<DriversVehicleResponse>> Update(int id, DriversVehicleRequest request)
         {
             var vehicle = await FindMyVehicleAsync(id);
@@ -111,7 +137,18 @@ namespace Taxi.Api.Controller
             return Ok(ToResponse(vehicle));
         }
 
+        /// <summary>
+        /// Deletes one of the logged-in driver's vehicles.
+        /// </summary>
+        /// <remarks>
+        /// Not allowed while the vehicle is the active one, or is on an accepted or in-progress ride.
+        /// </remarks>
         [HttpDelete("vehicle/{id:int}")]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status409Conflict)]
         public async Task<IActionResult> Delete(int id)
         {
             int userId = User.GetUserId();

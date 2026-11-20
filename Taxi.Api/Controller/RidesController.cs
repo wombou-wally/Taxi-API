@@ -29,9 +29,23 @@ namespace Taxi.Api.Controller
             _distanceService = distanceService;
         }
 
+        /// <summary>
+        /// Requests a ride (customer only).
+        /// </summary>
+        /// <remarks>
+        /// The fare estimate is calculated and stored. A customer can only have one active ride at a time.
+        /// </remarks>
         [HttpPost]
         [Authorize(Roles = nameof(Role.Customer))]
+<<<<<<< HEAD
         
+=======
+        [ProducesResponseType(typeof(RideResponse), StatusCodes.Status201Created)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status409Conflict)]
+>>>>>>> OpenAPIDoc-1.043
         public async Task<ActionResult<RideResponse>> RequestRide(RideRequest request)
         {
             int customerId = User.GetUserId();
@@ -86,8 +100,17 @@ namespace Taxi.Api.Controller
             return CreatedAtAction(nameof(GetRide), new { id = ride.Id }, ToResponse(ride, vehicleType.Name));
         }
 
+        /// <summary>
+        /// Lists the logged-in user's rides, newest first.
+        /// </summary>
+        /// <remarks>
+        /// Customers see their own rides, drivers see the rides they accepted. limit is 1-50.
+        /// </remarks>
         [HttpGet]
         [Authorize]
+        [ProducesResponseType(typeof(IEnumerable<RideResponse>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         public async Task<ActionResult<IEnumerable<RideResponse>>> GetMyRides(int limit = 20)
         {
             int userId = User.GetUserId();
@@ -108,8 +131,14 @@ namespace Taxi.Api.Controller
             return Ok(rides.Select(r => ToResponse(r, r.VehicleType.Name)).ToList());
         }
 
+        /// <summary>
+        /// Returns one ride the logged-in user is allowed to see.
+        /// </summary>
         [HttpGet("{id:int}")]
         [Authorize]
+        [ProducesResponseType(typeof(RideResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
         public async Task<ActionResult<RideResponse>> GetRide(int id)
         {
             int userId = User.GetUserId();
@@ -127,8 +156,20 @@ namespace Taxi.Api.Controller
             return Ok(ToResponse(ride, ride.VehicleType.Name));
         }
 
+        /// <summary>
+        /// Lists open ride requests near the driver (driver only).
+        /// </summary>
+        /// <remarks>
+        /// The driver must be approved, online, sharing a location and have an active vehicle. Only rides for the active vehicle's type within 10 km are returned, nearest first.
+        /// </remarks>
         [HttpGet("available")]
         [Authorize(Roles = nameof(Role.Driver))]
+        [ProducesResponseType(typeof(IEnumerable<AvailableRideResponse>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status409Conflict)]
         public async Task<ActionResult<IEnumerable<AvailableRideResponse>>> GetAvailableRides(int limit = 20)
         {
             int driverId = User.GetUserId();
@@ -181,8 +222,19 @@ namespace Taxi.Api.Controller
             return Ok(response);
         }
 
+        /// <summary>
+        /// Accepts an open ride (driver only).
+        /// </summary>
+        /// <remarks>
+        /// Atomic: if two drivers accept at the same time, one gets 409.
+        /// </remarks>
         [HttpPost("{id:int}/accept")]
         [Authorize(Roles = nameof(Role.Driver))]
+        [ProducesResponseType(typeof(RideResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status409Conflict)]
         public async Task<ActionResult<RideResponse>> AcceptRide(int id)
         {
             int driverId = User.GetUserId();
@@ -235,8 +287,16 @@ namespace Taxi.Api.Controller
             return Ok(await ReloadResponseAsync(id));
         }
 
+        /// <summary>
+        /// Starts an accepted ride (driver only).
+        /// </summary>
         [HttpPost("{id:int}/start")]
         [Authorize(Roles = nameof(Role.Driver))]
+        [ProducesResponseType(typeof(RideResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status409Conflict)]
         public async Task<ActionResult<RideResponse>> StartRide(int id)
         {
             int driverId = User.GetUserId();
@@ -261,8 +321,19 @@ namespace Taxi.Api.Controller
             return Ok(await ReloadResponseAsync(id));
         }
 
+        /// <summary>
+        /// Completes an in-progress ride and sets the final fare (driver only).
+        /// </summary>
+        /// <remarks>
+        /// The final fare is capped at a multiple of the estimate.
+        /// </remarks>
         [HttpPost("{id:int}/complete")]
         [Authorize(Roles = nameof(Role.Driver))]
+        [ProducesResponseType(typeof(RideResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status409Conflict)]
         public async Task<ActionResult<RideResponse>> CompleteRide(int id)
         {
             int driverId = User.GetUserId();
@@ -300,8 +371,20 @@ namespace Taxi.Api.Controller
             return Ok(await ReloadResponseAsync(id));
         }
 
+        /// <summary>
+        /// Cancels the customer's ride while it is requested or accepted.
+        /// </summary>
+        /// <remarks>
+        /// The body is optional. A reason of up to 200 characters can be given.
+        /// </remarks>
         [HttpPost("{id:int}/cancel")]
         [Authorize(Roles = nameof(Role.Customer))]
+        [ProducesResponseType(typeof(RideResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status409Conflict)]
         public async Task<ActionResult<RideResponse>> CancelRide(int id, [FromBody(EmptyBodyBehavior = EmptyBodyBehavior.Allow)] CancelRideRequest? request)
         {
             int customerId = User.GetUserId();
@@ -336,8 +419,19 @@ namespace Taxi.Api.Controller
             return Ok(await ReloadResponseAsync(id));
         }
 
+        /// <summary>
+        /// Lets the driver drop an accepted ride (driver only).
+        /// </summary>
+        /// <remarks>
+        /// The ride goes back to Requested so another driver can take it.
+        /// </remarks>
         [HttpPost("{id:int}/driver-cancel")]
         [Authorize(Roles = nameof(Role.Driver))]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status409Conflict)]
         public async Task<IActionResult> DriverCancelRide(int id)
         {
             int driverId = User.GetUserId();

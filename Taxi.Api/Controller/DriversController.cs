@@ -24,7 +24,16 @@ namespace Taxi.Api.Controller
             _hasher = hasher;
         }
 
+        /// <summary>
+        /// Registers a new driver account.
+        /// </summary>
+        /// <remarks>
+        /// The driver starts as Pending and cannot go online until an admin approves the account.
+        /// </remarks>
         [HttpPost("register")]
+        [ProducesResponseType(typeof(RegisterDriverResponse), StatusCodes.Status201Created)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status409Conflict)]
         public async Task<ActionResult<RegisterDriverResponse>> Register(RegisterDriverRequest request)
         {
             var email = request.Email.Trim().ToLowerInvariant();
@@ -66,8 +75,17 @@ namespace Taxi.Api.Controller
             return StatusCode(StatusCodes.Status201Created, res);
         }
 
+        /// <summary>
+        /// Lists drivers waiting for approval (admin only).
+        /// </summary>
+        /// <remarks>
+        /// Oldest registrations first.
+        /// </remarks>
         [Authorize(Roles = nameof(Role.Admin))]
         [HttpGet("pending")]
+        [ProducesResponseType(typeof(IEnumerable<PendingDriverResponse>), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
         public async Task<ActionResult<IEnumerable<PendingDriverResponse>>> PendingDrivers()
         {
             var pendingDrivers = await _context.DriverProfiles
@@ -86,8 +104,16 @@ namespace Taxi.Api.Controller
             return Ok(pendingDrivers);
         }
 
+        /// <summary>
+        /// Approves a pending driver (admin only).
+        /// </summary>
         [Authorize(Roles = nameof(Role.Admin))]
         [HttpPost("approve/{userId:int}")]
+        [ProducesResponseType(typeof(DriverStatusResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status409Conflict)]
         public async Task<ActionResult<DriverStatusResponse>> Approve(int userId)
         {
             var driver = await _context.DriverProfiles.FirstOrDefaultAsync(d => d.UserId == userId);
@@ -108,8 +134,16 @@ namespace Taxi.Api.Controller
             });
         }
 
+        /// <summary>
+        /// Rejects a pending driver (admin only).
+        /// </summary>
         [Authorize(Roles = nameof(Role.Admin))]
         [HttpPost("reject/{userId:int}")]
+        [ProducesResponseType(typeof(DriverStatusResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status409Conflict)]
         public async Task<ActionResult<DriverStatusResponse>> Reject(int userId)
         {
             var driver = await _context.DriverProfiles.FirstOrDefaultAsync(d => d.UserId == userId);
@@ -130,8 +164,20 @@ namespace Taxi.Api.Controller
             });
         }
 
+        /// <summary>
+        /// Puts the driver online with the chosen vehicle.
+        /// </summary>
+        /// <remarks>
+        /// The driver must be approved, and the vehicle must belong to them and have valid insurance.
+        /// </remarks>
         [Authorize(Roles = nameof(Role.Driver))]
         [HttpPost("online")]
+        [ProducesResponseType(typeof(DriverAvailabilityResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status409Conflict)]
         public async Task<ActionResult<DriverAvailabilityResponse>> Online(GoOnlineRequest request)
         {
             int id = User.GetUserId();
@@ -164,8 +210,19 @@ namespace Taxi.Api.Controller
             });
         }
 
+        /// <summary>
+        /// Takes the driver offline and clears their location.
+        /// </summary>
+        /// <remarks>
+        /// Returns 409 while the driver has an accepted or in-progress ride.
+        /// </remarks>
         [Authorize(Roles = nameof(Role.Driver))]
         [HttpPost("offline")]
+        [ProducesResponseType(typeof(DriverAvailabilityResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status409Conflict)]
         public async Task<ActionResult<DriverAvailabilityResponse>> Offline()
         {
             int id = User.GetUserId();
@@ -197,8 +254,17 @@ namespace Taxi.Api.Controller
             });
         }
 
+        /// <summary>
+        /// Updates the current location of an online driver.
+        /// </summary>
         [Authorize(Roles = nameof(Role.Driver))]
         [HttpPut("location")]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status409Conflict)]
         public async Task<ActionResult> UpdateLocation(UpdateLocationRequest request)
         {
             int id = User.GetUserId();
