@@ -186,7 +186,7 @@ Roles: **Customer**, **Driver**, **Admin**, **All** (any logged-in user), **Syst
 
 ### F. Quality and delivery
 
-- [ ] **Feature 1.043** — OpenAPI documentation with Scalar or Swagger  
+- [DONE] **Feature 1.043** — OpenAPI documentation with Scalar or Swagger  
        Role: Dev · Size: S (1) · Depends on: 1.027 · Stories: US-22  
        _Done when:_ All endpoints documented with examples and authorization shown.
 - [DONE] **Feature 1.044** — Multi-stage Dockerfile for the API  
@@ -201,7 +201,7 @@ Roles: **Customer**, **Driver**, **Admin**, **All** (any logged-in user), **Syst
 - [ ] **Feature 1.047** — Final README: overview, architecture, setup, API tour  
        Role: Dev · Size: M (2) · Depends on: 1.045, 1.043 · Stories: US-22  
        _Done when:_ A stranger can clone and run the project from the README alone.
-- [ ] **Feature 1.048** — Deploy the API and database to a hosting service  
+- [DONE] **Feature 1.048** — Deploy the API and database to a hosting service  
        Role: Dev · Size: L (3) · Depends on: 1.045, 1.046 · Stories: US-22  
        _Done when:_ A public URL serves the API; secrets are set as environment variables.
 

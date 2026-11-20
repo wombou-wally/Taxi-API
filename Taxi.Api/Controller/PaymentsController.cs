@@ -27,10 +27,6 @@ namespace Taxi.Api.Controller
         /// </remarks>
         [HttpPost]
         [Authorize(Roles = nameof(Role.Driver))]
-<<<<<<< HEAD
-        [Authorize(Roles = nameof(Role.Driver))]
-=======
->>>>>>> OpenAPIDoc-1.043
         [ProducesResponseType(typeof(PaymentResponse), StatusCodes.Status201Created)]
         [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]

@@ -37,15 +37,11 @@ namespace Taxi.Api.Controller
         /// </remarks>
         [HttpPost]
         [Authorize(Roles = nameof(Role.Customer))]
-<<<<<<< HEAD
-        
-=======
         [ProducesResponseType(typeof(RideResponse), StatusCodes.Status201Created)]
         [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(StatusCodes.Status403Forbidden)]
         [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status409Conflict)]
->>>>>>> OpenAPIDoc-1.043
         public async Task<ActionResult<RideResponse>> RequestRide(RideRequest request)
         {
             int customerId = User.GetUserId();
