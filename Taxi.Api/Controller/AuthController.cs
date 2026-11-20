@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Identity;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Npgsql;
@@ -26,7 +27,17 @@ namespace Taxi.Api.Controller
             _jwtTokenService = token;
         }
 
+        /// <summary>
+        /// Registers a new customer account.
+        /// </summary>
+        /// <remarks>
+        /// The email is trimmed and lower-cased. Returns 409 if an account with that email already exists.
+        /// </remarks>
+        [AllowAnonymous]
         [HttpPost("register")]
+        [ProducesResponseType(typeof(RegisterResponse), StatusCodes.Status201Created)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status409Conflict)]
         public async Task<ActionResult<RegisterResponse>> Register(RegisterRequest request)
         {
             var email = request.Email.Trim().ToLowerInvariant();
@@ -68,8 +79,17 @@ namespace Taxi.Api.Controller
             };
             return StatusCode(StatusCodes.Status201Created , res);
         }
-
+        /// <summary>
+        /// Logs in with email and password and returns a JWT.
+        /// </summary>
+        /// <remarks>
+        /// Use the token as a Bearer token on the other endpoints. Wrong email and wrong password return the same 401 on purpose.
+        /// </remarks>
+        [AllowAnonymous]
         [HttpPost("login")]
+        [ProducesResponseType(typeof(LoginResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized)]
         public async Task<ActionResult<LoginResponse>> Login(LoginRequest request)
         {
             var email = request.Email.Trim().ToLowerInvariant();

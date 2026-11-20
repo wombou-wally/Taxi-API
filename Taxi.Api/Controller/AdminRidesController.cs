@@ -21,7 +21,17 @@ namespace Taxi.Api.Controller
             _context = context;
         }
 
+        /// <summary>
+        /// Lists rides with optional filters (admin only).
+        /// </summary>
+        /// <remarks>
+        /// Filter by status, customer, driver and a requested-at date range. Newest first, paged (page size 1-100).
+        /// </remarks>
         [HttpGet]
+        [ProducesResponseType(typeof(PagedResponse<AdminRideResponse>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
         public async Task<ActionResult<PagedResponse<AdminRideResponse>>> ListRides(
             RideStatus? status,
             int? customerId,
@@ -88,7 +98,19 @@ namespace Taxi.Api.Controller
             return Ok(response);
         }
 
+        /// <summary>
+        /// Cancels a ride that is still active, whatever its stage (admin only).
+        /// </summary>
+        /// <remarks>
+        /// A reason is required. Returns 409 if the ride is already completed or cancelled.
+        /// </remarks>
         [HttpPost("{id:int}/cancel")]
+        [ProducesResponseType(typeof(AdminRideResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status409Conflict)]
         public async Task<ActionResult<AdminRideResponse>> ForceCancelRide(int id, AdminCancelRequest request)
         {
             var reason = request.Reason.Trim();

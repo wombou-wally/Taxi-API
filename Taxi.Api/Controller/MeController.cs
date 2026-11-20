@@ -18,7 +18,13 @@ namespace Taxi.Api.Controller
             _context = context;
         }
 
+        /// <summary>
+        /// Returns the profile of the logged-in user.
+        /// </summary>
         [HttpGet]
+        [ProducesResponseType(typeof(ProfileResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
         public async Task<ActionResult<ProfileResponse>> Get()
         {
             var userId = User.GetUserId();
@@ -40,7 +46,14 @@ namespace Taxi.Api.Controller
 
             return Ok(profile);
         }
+        /// <summary>
+        /// Updates the full name and phone of the logged-in user.
+        /// </summary>
         [HttpPut]
+        [ProducesResponseType(typeof(ProfileResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
         public async Task<ActionResult<ProfileResponse>> Update(UpdateProfileRequest request)
         {
             var userId = User.GetUserId();

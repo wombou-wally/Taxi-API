@@ -18,7 +18,18 @@ namespace Taxi.Api.Controller
             _context = context;
         }
 
+        /// <summary>
+        /// Updates the pricing and active flag of a vehicle type (admin only).
+        /// </summary>
+        /// <remarks>
+        /// Minimum fare must be at least the base fare. Prices are rounded to 2 decimals.
+        /// </remarks>
         [HttpPut("{id:int}")]
+        [ProducesResponseType(typeof(VehicleResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
         public async Task<ActionResult<VehicleResponse>> Update(VehicleRequest request, int id)
         {
             if (!(request.MinimumFare >= request.BaseFare))

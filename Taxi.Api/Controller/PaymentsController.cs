@@ -19,8 +19,20 @@ namespace Taxi.Api.Controller
             _context = context;
         }
 
+        /// <summary>
+        /// Records the payment for a completed ride (driver only).
+        /// </summary>
+        /// <remarks>
+        /// The amount is taken from the ride's final fare. One payment per ride.
+        /// </remarks>
         [HttpPost]
         [Authorize(Roles = nameof(Role.Driver))]
+        [ProducesResponseType(typeof(PaymentResponse), StatusCodes.Status201Created)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status409Conflict)]
         public async Task<ActionResult<PaymentResponse>> RecordPayment(int id, RecordPaymentRequest request)
         {
             int driverId = User.GetUserId();
@@ -71,8 +83,14 @@ namespace Taxi.Api.Controller
             return CreatedAtAction(nameof(GetPayment), new { id }, ToResponse(payment));
         }
 
+        /// <summary>
+        /// Returns the payment of a ride the logged-in user is allowed to see.
+        /// </summary>
         [HttpGet]
         [Authorize]
+        [ProducesResponseType(typeof(PaymentResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
         public async Task<ActionResult<PaymentResponse>> GetPayment(int id)
         {
             int userId = User.GetUserId();
