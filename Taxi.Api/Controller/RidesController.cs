@@ -21,12 +21,14 @@ namespace Taxi.Api.Controller
         private readonly TaxiDbContext _context;
         private readonly IFareService _fareService;
         private readonly IDistanceService _distanceService;
+        private readonly IRideNotifier _notifier;
 
-        public RidesController(TaxiDbContext context, IFareService fareService, IDistanceService distanceService)
+        public RidesController(TaxiDbContext context, IFareService fareService, IDistanceService distanceService, IRideNotifier notifier)
         {
             _context = context;
             _fareService = fareService;
             _distanceService = distanceService;
+            _notifier = notifier;
         }
 
         /// <summary>
@@ -92,6 +94,8 @@ namespace Taxi.Api.Controller
             {
                 return Problem(statusCode: 409, title: "You already have an active ride");
             }
+
+            await _notifier.NotifyAvailableRidesChangedAsync();
 
             return CreatedAtAction(nameof(GetRide), new { id = ride.Id }, ToResponse(ride, vehicleType.Name));
         }
@@ -251,6 +255,7 @@ namespace Taxi.Api.Controller
                 return Problem(statusCode: 409, title: "You already have an active ride");
             }
 
+            
             int changed;
             try
             {
@@ -280,7 +285,12 @@ namespace Taxi.Api.Controller
                 return Problem(statusCode: 409, title: "Ride is no longer available");
             }
 
-            return Ok(await ReloadResponseAsync(id));
+            var ride = await LoadRideAsync(id);
+
+            await _notifier.NotifyRideChangedAsync(id, ride.Status.ToString(), ride.CustomerId, driverId);
+            await _notifier.NotifyAvailableRidesChangedAsync();
+
+            return Ok(ToResponse(ride, ride.VehicleType.Name));
         }
 
         /// <summary>
@@ -314,7 +324,11 @@ namespace Taxi.Api.Controller
                 return Problem(statusCode: 409, title: "Ride cannot be started");
             }
 
-            return Ok(await ReloadResponseAsync(id));
+            var ride = await LoadRideAsync(id);
+
+            await _notifier.NotifyRideChangedAsync(id, ride.Status.ToString(), ride.CustomerId, driverId);
+
+            return Ok(ToResponse(ride, ride.VehicleType.Name));
         }
 
         /// <summary>
@@ -364,7 +378,11 @@ namespace Taxi.Api.Controller
                 return Problem(statusCode: 409, title: "Ride cannot be completed");
             }
 
-            return Ok(await ReloadResponseAsync(id));
+            var completed = await LoadRideAsync(id);
+
+            await _notifier.NotifyRideChangedAsync(id, completed.Status.ToString(), completed.CustomerId, driverId);
+
+            return Ok(ToResponse(completed, completed.VehicleType.Name));
         }
 
         /// <summary>
@@ -412,7 +430,15 @@ namespace Taxi.Api.Controller
                 return Problem(statusCode: 409, title: "Ride cannot be cancelled");
             }
 
-            return Ok(await ReloadResponseAsync(id));
+            var ride = await LoadRideAsync(id);
+
+            await _notifier.NotifyRideChangedAsync(id, ride.Status.ToString(), ride.CustomerId, ride.DriverProfileUserId);
+            if (ride.DriverProfileUserId == null)
+            {
+                await _notifier.NotifyAvailableRidesChangedAsync();
+            }
+
+            return Ok(ToResponse(ride, ride.VehicleType.Name));
         }
 
         /// <summary>
@@ -451,19 +477,15 @@ namespace Taxi.Api.Controller
                 return Problem(statusCode: 409, title: "Ride cannot be cancelled");
             }
 
+            var ride = await LoadRideAsync(id);
+
+            await _notifier.NotifyRideChangedAsync(id, ride.Status.ToString(), ride.CustomerId, driverId);
+            await _notifier.NotifyAvailableRidesChangedAsync();
+
             return NoContent();
         }
 
         // ---------- helpers ----------
-
-        // ExecuteUpdate does not touch tracked objects, so the response is read fresh.
-        private async Task<RideResponse> ReloadResponseAsync(int rideId)
-        {
-            var ride = await _context.Rides.AsNoTracking()
-                .Include(r => r.VehicleType)
-                .FirstAsync(r => r.Id == rideId);
-            return ToResponse(ride, ride.VehicleType.Name);
-        }
 
         private async Task<(DriverProfile? Driver, ActionResult? Error)> LoadReadyDriverAsync(int driverId)
         {
@@ -511,5 +533,14 @@ namespace Taxi.Api.Controller
             Status = ride.Status.ToString(),
             VehicleTypeId = ride.VehicleTypeId,
         };
+
+        // ExecuteUpdate does not touch tracked objects, so the ride is read fresh from the database.
+        private async Task<Ride> LoadRideAsync(int rideId)
+        {
+            return await _context.Rides
+                .AsNoTracking()
+                .Include(r => r.VehicleType)
+                .FirstAsync(r => r.Id == rideId);
+        }
     }
 }

@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Taxi.Api.Data;
 using Taxi.Api.DTO.Ride;
 using Taxi.Api.Models;
+using Taxi.Api.Services;
 
 namespace Taxi.Api.Controller
 {
@@ -16,9 +17,12 @@ namespace Taxi.Api.Controller
         private const int MaxPage = 100000;
 
         private readonly TaxiDbContext _context;
-        public AdminRidesController(TaxiDbContext context)
+        private readonly IRideNotifier _notifier;
+
+        public AdminRidesController(TaxiDbContext context, IRideNotifier notifier)
         {
             _context = context;
+            _notifier = notifier;
         }
 
         /// <summary>
@@ -139,6 +143,13 @@ namespace Taxi.Api.Controller
             var ride = await _context.Rides.AsNoTracking()
                 .Include(r => r.VehicleType)
                 .FirstAsync(r => r.Id == id);
+
+            await _notifier.NotifyRideChangedAsync(id, ride.Status.ToString(), ride.CustomerId, ride.DriverProfileUserId);
+            if (ride.DriverProfileUserId == null)
+            {
+                await _notifier.NotifyAvailableRidesChangedAsync();
+            }
+
             return Ok(ToAdminResponse(ride));
         }
 

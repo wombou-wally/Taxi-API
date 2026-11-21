@@ -1,0 +1,49 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>SignalR test</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/8.0.7/signalr.min.js"></script>
+</head>
+<body>
+    <h3>RideHub test</h3>
+    <input id="token" size="60" placeholder="Paste a JWT here" />
+    <button id="connectBtn">Connect</button>
+    <pre id="log"></pre>
+
+    <script>
+    const logBox = document.getElementById("log");
+
+    function log(text) {
+      const time = new Date().toLocaleTimeString();
+      logBox.textContent = time + "  " + text + "\n" + logBox.textContent;
+    }
+
+    document.getElementById("connectBtn").addEventListener("click", async () => {
+      const token = document.getElementById("token").value.trim();
+
+      const connection = new signalR.HubConnectionBuilder()
+        .withUrl("/hubs/rides", { accessTokenFactory: () => token })
+        .withAutomaticReconnect()
+        .build();
+
+      connection.on("RideChanged", (rideId, status) => {
+        log("RideChanged: ride " + rideId + " is now " + status);
+      });
+
+      connection.on("AvailableRidesChanged", () => {
+        log("AvailableRidesChanged: refresh the list of open rides");
+      });
+
+      connection.onclose(() => log("Connection closed"));
+
+      try {
+        await connection.start();
+        log("Connected");
+      } catch (err) {
+        log("Could not connect: " + err);
+      }
+    });
+    </script>
+</body>
+</html>

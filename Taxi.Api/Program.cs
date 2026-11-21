@@ -8,6 +8,7 @@ using Scalar.AspNetCore;
 using System.Text;
 using System.Text.Json.Serialization;
 using Taxi.Api.Data;
+using Taxi.Api.Hubs;
 using Taxi.Api.Infrastructure;
 using Taxi.Api.Models;
 using Taxi.Api.Services;
@@ -16,7 +17,7 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 
 builder.Services.AddControllers().AddJsonOptions(option => option.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()));
-
+builder.Services.AddSignalR();
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi(option =>
 {
@@ -30,6 +31,7 @@ builder.Services.AddScoped<IPasswordHasher<User>, PasswordHasher<User>>();
 builder.Services.AddSingleton<IFareService, FareService>();
 builder.Services.AddSingleton<IDistanceService, HaversineDistanceService>();
 builder.Services.AddScoped<JwtTokenService>();
+builder.Services.AddScoped<IRideNotifier , RideNotifier>();
 var jwtKey = builder.Configuration["Jwt:Key"];
 if (string.IsNullOrEmpty(jwtKey) || jwtKey.Length < 32)
 {
@@ -51,6 +53,20 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ValidateLifetime = true,
             ClockSkew = TimeSpan.FromSeconds(30)
         };
+        options.Events = new JwtBearerEvents
+        {
+            OnMessageReceived =  context =>
+            {
+                var accessToken = context.Request.Query["access_token"];
+                var path = context.HttpContext.Request.Path;
+
+                if(!string.IsNullOrEmpty(accessToken) && path.StartsWithSegments("/hubs"))
+                {
+                    context.Token = accessToken;
+                }
+                return Task.CompletedTask;
+            }
+        };
     }
     );
 builder.Services.AddProblemDetails();
@@ -64,6 +80,7 @@ builder.Services.Configure<ForwardedHeadersOptions>(options =>
 });
     
 var app = builder.Build();
+
 app.UseForwardedHeaders();
 
 app.UseStatusCodePages();
@@ -74,14 +91,17 @@ if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
     app.MapScalarApiReference();
-    
+    app.UseStaticFiles();
+
 }
 
 app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();
 
+
 app.MapControllers();
+app.MapHub<RideHub>("/hubs/rides");
 using var db = app.Services.CreateScope();
 var  taxiDb = db.ServiceProvider.GetRequiredService<TaxiDbContext>();
 var p = app.Configuration.GetValue<bool>("Database:MigrateOnStartup");
